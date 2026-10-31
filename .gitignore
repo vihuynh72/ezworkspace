@@ -1,0 +1,16 @@
+node_modules
+dist
+.DS_Store
+*.log
+# Secrets: Photon, Convex, Clerk keys live only in local env files
+.env
+.env.*
+!.env.example
+*.local
+.clerk/
+# Agent skills installed by the scaffolds (reinstallable from skills-lock.json)
+web/.agents/
+web/.claude/
+web/.cursor/
+agent/.agents/
+agent/.claude/
