@@ -5,6 +5,7 @@ import { UserButton, useUser } from "@clerk/clerk-react";
 import {
   ArrowRightIcon,
   CheckCircledIcon,
+  ChevronRightIcon,
   CircleIcon,
   ExclamationTriangleIcon,
   ExternalLinkIcon,
@@ -18,12 +19,14 @@ import { ConvexError } from "convex/values";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../../convex/_generated/api";
 import { Connector, DonePlate, NextPlate, SignBand, StopCircle, VoiceDot } from "./route";
+import { compactTerms } from "./terms";
 
 export type Overview = NonNullable<FunctionReturnType<typeof api.team.overview>>;
-type Payout = NonNullable<Overview["payout"]>;
+type Playbook = NonNullable<Overview["playbooks"]>[number];
 
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const hours = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 1 });
+const pct = (share: number) => `${Math.round(share * 100)}%`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 // Backend ConvexErrors carry user-facing text ("Enter a phone number like ..."); anything else gets the fallback.
 const errorText = (e: unknown, fallback: string) => (e instanceof ConvexError ? String(e.data) : fallback);
@@ -82,7 +85,9 @@ export function DashboardView({ data }: { data: Overview }) {
           className="lg:col-span-4"
         />
         <TeamMap data={data} className="lg:col-span-5" />
-        <PayoutPanel payout={data.payout} company={data.team.company} className="lg:col-span-3" />
+        <ValuePanel value={data.value} className="lg:col-span-3" />
+        <Playbooks playbooks={data.playbooks} className="lg:col-span-8" />
+        <Readiness data={data} className="lg:col-span-4" />
         <Registry className="lg:col-span-8" />
         <Invite className="lg:col-span-4" />
       </main>
@@ -260,14 +265,7 @@ function Compact({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const name = user?.fullName || user?.primaryEmailAddress?.emailAddress || "COO";
-  const months = compact?.floorMonths ?? 12;
-  const pct = compact?.dividendPct ?? 30;
-  const terms: [string, string][] = [
-    ["No Worker Worse Off.", `No pay cuts or AI layoffs for ${months} months. Any role change comes with a funded transition plan.`],
-    ["Automation Dividend.", `${pct}% of measured AI savings goes to the workers who surfaced them, paid before ezworkspace's fee.`],
-    ["Amnesty and credit.", "Hidden AI use is never held against anyone, and whoever found a shortcut gets credit for it."],
-    ["Team totals only.", "No one's individual answers are shown. Groups under 3 people stay hidden."],
-  ];
+  const terms = compactTerms(compact?.floorMonths);
   const Icon = compact ? CheckCircledIcon : CircleIcon;
   return (
     <Panel
@@ -285,7 +283,7 @@ function Compact({
               className={cn("mt-0.5 h-[18px] w-[18px] shrink-0", compact ? "text-go" : "text-muted-foreground")}
             />
             <p>
-              <strong className="font-bold">{name}</strong> {text}
+              <strong className="font-bold">{name}.</strong> {text}
             </p>
           </li>
         ))}
@@ -374,7 +372,7 @@ function TeamMap({ data, className }: { data: Overview; className?: string }) {
         </p>
       )}
       {map ? (
-        <OpenMap map={map} plans={data.plansIssued} practice={data.practiceSessions} />
+        <OpenMap map={map} />
       ) : (
         <div className="hatch grid min-h-[320px] place-items-center rounded-md border border-dashed border-input p-4">
           {/* A sign hung over a closed-off area of the floor plan, not a card. */}
@@ -410,20 +408,7 @@ function Key({ ok, children }: { ok: boolean; children: ReactNode }) {
   );
 }
 
-function OpenMap({
-  map,
-  plans,
-  practice,
-}: {
-  map: NonNullable<Overview["map"]>;
-  plans: number | null;
-  practice: number | null;
-}) {
-  const facts = [
-    `${plural(map.originators, "person", "people")} credited for shortcuts`,
-    plans !== null && `${plural(plans, "transition plan")} sent`,
-    practice !== null && plural(practice, "practice session"),
-  ].filter(Boolean);
+function OpenMap({ map }: { map: NonNullable<Overview["map"]> }) {
   return (
     <div className="animate-rise">
       <p className="flex flex-wrap items-baseline gap-x-2">
@@ -469,13 +454,7 @@ function OpenMap({
         </>
       )}
       <p className="mt-3 border-t pt-3 text-[15px]">
-        {facts.map((fact, i) => (
-          // Lines break only between facts, never inside one.
-          <span key={i}>
-            {i > 0 && " · "}
-            <span className="whitespace-nowrap">{fact}</span>
-          </span>
-        ))}
+        {plural(map.originators, "person", "people")} credited for shortcuts
       </p>
       {NEBULA_URL && (
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -493,81 +472,207 @@ function OpenMap({
   );
 }
 
-/* ---------- Payout order ---------- */
+/* ---------- Value: what keeping the team is worth ---------- */
 
-const BAR: Record<Payout["steps"][number]["kind"], string> = {
-  workers: "bg-go",
-  fee: "bg-input",
-  // Neutral, so green (workers) is the only saturated bar: the eye lands on who is paid first.
-  company: "bg-input",
-};
+/** A figure that stays hatched until the map opens. */
+function Fig({ value, className }: { value: string | null; className?: string }) {
+  return value === null ? (
+    <span className={cn("hatch inline-block h-[0.9em] w-[3.5em] rounded-sm bg-muted/60 align-[-0.1em]", className)}>
+      <span className="sr-only">Sealed</span>
+    </span>
+  ) : (
+    <span className={cn("tabular-nums", className)}>{value}</span>
+  );
+}
 
-function PayoutPanel({ payout, company, className }: { payout: Overview["payout"]; company: string; className?: string }) {
-  const steps = payout?.steps ?? [
-    { order: 1, kind: "workers" as const, label: "Workers who surfaced the savings (30%)", amount: 0 },
-    { order: 2, kind: "fee" as const, label: "ezworkspace fee (10% on top of the dividend)", amount: 0 },
-    { order: 3, kind: "company" as const, label: `${company} keeps the rest`, amount: 0 },
+function ValuePanel({ value, className }: { value: Overview["value"]; className?: string }) {
+  const compare: [string, string | null, string?][] = [
+    ["Replace one clerk", value && `${usd.format(value.replaceCostLow)}–${usd.format(value.replaceCostHigh)}`],
+    ["Bootcamp", value && `~${usd.format(value.bootcampCost)}`, "+ 14 weeks per person"],
   ];
-  const total = steps.reduce((sum, s) => sum + s.amount, 0) || 1;
   return (
     <Panel
-      id="payout-title"
-      title="Who gets paid first"
-      description={
-        payout ? (
-          <>
-            <span className="font-semibold text-foreground">{usd.format(payout.quarterlySavings)}</span> in measured AI
-            savings this quarter
-          </>
-        ) : (
-          "Amounts appear when the map opens."
-        )
-      }
+      id="value-title"
+      title="What it's worth"
+      description={value ? "Team totals, from the map." : "Numbers appear when the map opens."}
       className={className}
     >
-      <ol className="space-y-3.5">
-        {steps.map((s, i) => (
-          <li key={s.order}>
-            <div className="flex items-start justify-between gap-3">
-              <p className="flex gap-2 text-[15px] font-semibold leading-snug">
-                <span
-                  aria-hidden
-                  className="mt-px grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                >
-                  {s.order}
-                </span>
-                <span>
-                  <span className="sr-only">Paid {["first", "second", "third"][i]}: </span>
-                  {s.label}
-                </span>
-              </p>
-              {payout ? (
-                <span
-                  className={cn(
-                    "animate-rise font-bold tabular-nums leading-tight",
-                    s.kind === "workers" ? "text-2xl text-go" : "text-lg",
-                  )}
-                  style={{ animationDelay: `${i * 450 + 300}ms` }}
-                >
-                  {usd.format(s.amount)}
-                </span>
-              ) : (
-                <span className="text-sm text-muted-foreground">Sealed</span>
-              )}
-            </div>
-            <div className={cn("ml-7 mt-1.5 h-2.5 overflow-hidden rounded-full", payout ? "bg-muted" : "hatch bg-muted/50")}>
-              {payout && (
-                // Staggered so the workers' bar always lands first.
-                <div
-                  className={cn("h-full min-w-1 origin-left animate-grow-x rounded-full", BAR[s.kind])}
-                  style={{ width: `${(s.amount / total) * 100}%`, animationDelay: `${i * 450}ms` }}
-                />
-              )}
-            </div>
-          </li>
+      <p className="flex flex-wrap items-baseline gap-x-2">
+        <Fig value={value && pct(value.aiShare)} className="text-3xl font-bold tracking-[-0.02em]" />
+        <span className="font-semibold">of team time is AI-assistable</span>
+      </p>
+      <ul className="mt-2 space-y-0.5 text-[15px]">
+        <li>
+          <Fig value={value && `${hours(value.hoursPerWeek)} hrs/week`} className="font-bold" /> back
+        </li>
+        <li>
+          <Fig value={value && `${usd.format(value.quarterlyValue)}/quarter`} className="font-bold" /> of time
+        </li>
+      </ul>
+      <h3 className="mt-4 text-[15px] font-bold">Compared with</h3>
+      <dl className="mt-1 divide-y text-[15px]">
+        {compare.map(([label, amount, note]) => (
+          <div key={label} className="flex items-baseline justify-between gap-3 py-1.5">
+            <dt>{label}</dt>
+            <dd className="text-right font-semibold">
+              <Fig value={amount} />
+              {note && value && <span className="block text-sm font-normal text-muted-foreground">{note}</span>}
+            </dd>
+          </div>
         ))}
-      </ol>
-      <p className="mt-4 border-t pt-3 text-base font-bold">We don't get paid until they do.</p>
+      </dl>
+      {value && value.sources.length > 0 && (
+        <p className="mt-1 text-sm text-muted-foreground">
+          Sources:{" "}
+          {value.sources.map((s: { label: string; url: string }, i: number) => (
+            <span key={s.url}>
+              {i > 0 && ", "}
+              <a href={s.url} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">
+                {s.label}
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </span>
+          ))}
+        </p>
+      )}
+      <p className="mt-4 border-t pt-3 text-base font-bold">Keep your people. Move them into AI-era work.</p>
+    </Panel>
+  );
+}
+
+function SealedNote() {
+  return (
+    <p className="flex items-center gap-2 text-[15px] text-muted-foreground">
+      <LockClosedIcon aria-hidden className="h-4 w-4 shrink-0" />
+      Sealed until the map opens.
+    </p>
+  );
+}
+
+/* ---------- Playbooks: ideas that spread ---------- */
+
+function Playbooks({ playbooks, className }: { playbooks: Overview["playbooks"]; className?: string }) {
+  return (
+    <Panel
+      id="playbooks-title"
+      title="Playbooks"
+      description="Ideas spread up from workers and down from leadership."
+      className={className}
+    >
+      {playbooks === null ? (
+        <SealedNote />
+      ) : playbooks.length === 0 ? (
+        <p className="text-[15px] text-muted-foreground">No playbooks yet. Shortcuts workers share show up here.</p>
+      ) : (
+        <ul className="divide-y border-y">
+          {playbooks.map((p: Playbook) => (
+            <PlaybookRow key={p._id} playbook={p} />
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+function PlaybookRow({ playbook: p }: { playbook: Playbook }) {
+  const publish = useMutation(api.team.publishPlaybook);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  return (
+    <li className="py-3">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-bold leading-snug">{p.title}</p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+            <span className="rounded-sm bg-muted px-2 py-0.5 font-semibold text-foreground">
+              {p.source === "worker" ? "From a teammate" : "From leadership"}
+            </span>
+            <span>{p.category}</span>
+            <span aria-hidden>·</span>
+            <span>{p.adopters} adopted</span>
+          </p>
+        </div>
+        {p.published ? (
+          <span className="inline-flex items-center gap-1.5 py-1.5 text-sm font-bold text-go">
+            <CheckCircledIcon aria-hidden className="h-4 w-4" />
+            Published
+          </span>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 border-input"
+            disabled={busy}
+            onClick={() => {
+              setBusy(true);
+              setError("");
+              publish({ playbookId: p._id })
+                .catch((err) => setError(errorText(err, "Couldn't publish it. Try again.")))
+                .finally(() => setBusy(false));
+            }}
+          >
+            {busy && <ReloadIcon aria-hidden className="mr-2 h-4 w-4 animate-spin" />}
+            Publish to team
+          </Button>
+        )}
+      </div>
+      <details className="group mt-1.5">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-sm text-sm font-semibold hover:underline [&::-webkit-details-marker]:hidden">
+          <ChevronRightIcon aria-hidden className="h-4 w-4 transition-transform group-open:rotate-90" />
+          {plural(p.steps.length, "step")}
+        </summary>
+        <ol className="mt-2 list-decimal space-y-1 pl-10 text-[15px]">
+          {p.steps.map((step: string, i: number) => (
+            <li key={i}>{step}</li>
+          ))}
+        </ol>
+      </details>
+      {error && <InlineError>{error}</InlineError>}
+    </li>
+  );
+}
+
+/* ---------- AI readiness ---------- */
+
+function Readiness({ data, className }: { data: Overview; className?: string }) {
+  const r = data.readiness;
+  // null = a group of 1-2 people, hidden like every group under 3.
+  const rows: [string, number | null][] = r
+    ? [
+        ["On the transition path", r.onTransition],
+        ["New hires onboarding", r.onNewHire],
+        ["Finished", r.completed],
+      ]
+    : [];
+  return (
+    <Panel id="readiness-title" title="AI readiness" description="Team totals only." className={className}>
+      {r ? (
+        <>
+          <dl className="divide-y border-y">
+            {rows.map(([label, n]) => (
+              <div key={label} className="flex items-center justify-between gap-3 py-2">
+                <dt className="text-[15px] font-semibold">{label}</dt>
+                <dd>
+                  {n === null ? (
+                    <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <EyeNoneIcon aria-hidden className="h-4 w-4" />
+                      Hidden, under 3
+                    </span>
+                  ) : (
+                    <span className="text-2xl font-bold tabular-nums">{n}</span>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 text-[15px]">
+            {plural(data.plansIssued ?? 0, "transition plan")} sent <span aria-hidden>·</span>{" "}
+            {plural(data.practiceSessions ?? 0, "practice session")}
+          </p>
+        </>
+      ) : (
+        <SealedNote />
+      )}
     </Panel>
   );
 }

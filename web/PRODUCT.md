@@ -11,7 +11,7 @@ web
 ## Users
 
 - **Workers (primary).** Back-office employees with zero AI background whose jobs automation threatens. Canonical persona: Maria, an accounts-payable specialist, eight years in. They text ezworkspace over iMessage or use the web chat on a phone. Their question is "will this be used to cut my job?"
-- **COO / VP Ops (payer).** Runs a 200–2,000-person firm under an AI mandate. Uses the dashboard to watch the team join, sign the Compact, and read the unsealed redesign map and payout.
+- **COO / VP Ops (payer).** Runs a 200–2,000-person firm under an AI mandate. Uses the dashboard to watch the team join, sign the Compact, and read the unsealed redesign map and value.
 - **Demo audience.** VCs and founders judging a 3-minute table demo; one judge texts in from the founder's iPhone as the 5th worker.
 
 ## Product Purpose
@@ -32,8 +32,7 @@ Workers hold one key. The employer sees nothing until quorum is reached and the 
 ## Capabilities and Constraints
 
 - Stack: Vite + React + Tailwind + shadcn/ui, Clerk (COO sign-in), Convex (live queries). iMessage via Photon Spectrum.
-- The Compact, verbatim terms: (1) No Worker Worse Off: no pay cuts or AI layoffs for 12 months; any role change comes with a funded transition plan. (2) Automation Dividend: 30% of measured AI savings goes to the workers who surfaced them, paid before ezworkspace's fee. (3) Shadow-AI amnesty and originator credit. (4) Team totals only; groups under 3 are hidden.
-- Payout order: workers (30% of savings), ezworkspace fee (10% on top of the dividend), company keeps the rest.
+- The Compact, verbatim terms: (1) No Worker Worse Off: no pay cuts or AI layoffs for 12 months; any role change comes with a funded transition plan. (2) Paid learning time: workers practice with their coach on company time. (3) Shadow-AI amnesty and originator credit. (4) Team totals only; groups under 3 are hidden.
 - Worker commands: PLAN, TRY, DELETE; any question gets a plain-language answer. Voice notes via text-to-speech.
 - Pricing figures in docs are hypotheses; do not show them in the UI.
 

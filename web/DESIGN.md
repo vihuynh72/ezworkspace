@@ -165,7 +165,7 @@ Restrained: tinted neutrals carry the surface; four state colors each mean exact
 
 ### Secondary
 - **Wayfinding Yellow** (signal-yellow): the "next step" plate, the one control that performs that step, and the inner focus ring. Nothing else.
-- **Route Green** (route-green, route-green-soft): done states, the traveled route, the signed stamp, the Keep List, and the workers' share of the payout (the only saturated payout bar; the fee and the company's share are control-edge gray).
+- **Route Green** (route-green, route-green-soft): done states, the traveled route, the signed stamp, the Keep List, and workers' progress (the only saturated value bar; the fee and the company's share are control-edge gray).
 
 ### Tertiary
 - **Review Amber** (review-amber, review-amber-soft): "Pending review" in the public registry, where a person must look before anything happens.
@@ -201,7 +201,7 @@ Restrained: tinted neutrals carry the surface; four state colors each mean exact
 ## Layout
 
 - Max content width 1376px, gutters 16px on phones and 32px from 640px. Panels pad 20px; panel grid gap 16px.
-- Dashboard: sign band (56px), then the full-width route strip, then three panels in story order on a 12-column grid from 1024px: Compact (4), map (5), payout (3). Registry (8) and invite (4) sit below. The route, Compact, map, and payout must fit a 1440x790 viewport without scrolling.
+- Dashboard: sign band (56px), then the full-width route strip, then three panels in story order on a 12-column grid from 1024px: Compact (4), map (5), valuut (3). Registry (8) and invite (4) sit below. The route, Compact, map, and value must fit a 1440x790 viewport without scrolling.
 - Below 1024px every panel stacks, and the route shows only its line and the next step (the full route at sign size needs about 700px).
 - Chat: full-height column (100dvh) capped at 680px; header and composer fixed by flex, messages scroll in between; safe-area insets respected.
 - Fixed rem sizes, no fluid type on working screens.
@@ -217,7 +217,7 @@ Flat signage. Panels sit on the concourse with a 1px rule border and no shadow. 
 
 Gently rounded plates: 6px for controls and plates, 8px for panels, 20px for chat bubbles with a 6px tail corner, full pills for chips, circles for route stops (44px with a 3px ring on the dashboard route, 32px on the signed-out diagram, 24px with a 2px ring as a panel's title marker) and voice dots (28px).
 
-**The Hatch Means Closed Rule.** A diagonal 1.5px hatch every 11px marks an area that exists but is sealed: the map before both keys turn, the payout bars before amounts are public. Never used as texture.
+**The Hatch Means Closed Rule.** A diagonal 1.5px hatch every 11px marks an area that exists but is sealed: the map before both keys turn, the value figures before amounts are public. Never used as texture.
 
 ## Components
 
@@ -244,7 +244,7 @@ The charcoal sign band: wordmark left, team name after a thin divider, account c
 Voice dots joined by short connectors, then interchange stops for the Compact and the map (the map stop carries a lock). Traveled segments are solid route green; the road ahead is a dashed gray line. Exactly one yellow "next" plate sits under the next stop; when the step is the COO's, the plate is a link that focuses the yellow Sign button in place (no scroll jump). Done stops read in green with a check. A voice that arrives while the page is open pops in with a soft green halo.
 
 ### Motion
-Exponential ease-out (cubic-bezier(0.16, 1, 0.3, 1)) from visible defaults: rise (450ms) for new content, pop plus halo for an arriving voice, payout bars grow left to right (900ms) staggered 450ms so the workers' bar always lands first, the signed stamp settles in 350ms. Reduced motion collapses all of it to the final state.
+Exponential ease-out (cubic-bezier(0.16, 1, 0.3, 1)) from visible defaults: rise (450ms) for new content, pop plus halo for an arriving voice, value figures grow left to right (900ms) staggered 450ms so the workers' bar always lands first, the signed stamp settles in 350ms. Reduced motion collapses all of it to the final state.
 
 ## Do's and Don'ts
 
@@ -252,7 +252,7 @@ Exponential ease-out (cubic-bezier(0.16, 1, 0.3, 1)) from visible defaults: rise
 - **Do** say the next step in plain words on a yellow plate, one at a time.
 - **Do** replace a completed control with its stamp in place (Sign button becomes "Signed by ... at ...").
 - **Do** pair every state color with an icon or word.
-- **Do** keep money to workers in route green, list it first, and give it the largest figure in the payout panel.
+- **Do** keep what workers gain in route green, list it first, and give it the largest figure in the value panel.
 
 ### Don't:
 - **Don't** use yellow for decoration, highlights, or a second meaning.

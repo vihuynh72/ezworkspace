@@ -1,15 +1,10 @@
 import { Dashboard } from "@/components/dashboard";
 import { Connector, SignBand, StopCircle } from "@/components/route";
+import { compactTerms } from "@/components/terms";
 import { Button } from "@/components/ui/button";
 import { SignInButton } from "@clerk/clerk-react";
 import { CheckCircledIcon } from "@radix-ui/react-icons";
 import { AuthLoading, Authenticated, Unauthenticated } from "convex/react";
-
-const GUARANTEES = [
-  ["No worker worse off", "No pay cuts or AI layoffs for 12 months. Any role change comes with a funded transition plan."],
-  ["Workers get paid first", "30% of measured AI savings goes to the people who found them, before ezworkspace earns a cent."],
-  ["Private by design", "The company sees team totals only, and nothing at all until 5 workers join and the COO signs."],
-];
 
 const STOPS = [
   ["5 workers text in", "Each one privately, by iMessage or web chat"],
@@ -40,11 +35,14 @@ function Hero() {
       <main className="mx-auto grid w-full max-w-[1200px] flex-1 content-center gap-x-16 gap-y-10 px-4 py-10 sm:px-8 lg:grid-cols-12 lg:py-14">
         <div className="lg:col-span-7">
           <h1 className="text-[2.75rem] font-bold leading-[1.04] tracking-[-0.03em] sm:text-[4rem]">
-            Better off, not laid off.
+            Bring your people into the AI era.
+            <span className="mt-4 block text-[1.75rem] leading-tight tracking-[-0.02em] sm:text-[2.25rem]">
+              Nobody ends up worse off.
+            </span>
           </h1>
-          <p className="mt-5 max-w-[36ch] text-xl leading-normal text-muted-foreground sm:text-[1.375rem]">
-            ezworkspace is the private AI transition coach for every worker, plus a Compact the company signs before
-            it sees anything.
+          <p className="mt-5 max-w-[40ch] text-xl leading-normal text-muted-foreground sm:text-[1.375rem]">
+            A private AI coach every worker can text or talk to. Cheaper and faster than firing, re-hiring or
+            retraining.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <SignInButton mode="modal">
@@ -62,7 +60,7 @@ function Hero() {
             What every worker is promised
           </h2>
           <ul className="mt-3 divide-y border-y">
-            {GUARANTEES.map(([title, text]) => (
+            {compactTerms().map(([title, text]) => (
               <li key={title} className="flex gap-3 py-4">
                 <CheckCircledIcon aria-hidden className="mt-1 h-5 w-5 shrink-0 text-go" />
                 <div>
