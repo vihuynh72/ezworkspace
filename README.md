@@ -2,7 +2,19 @@
 
 **Falling behind on AI is no longer a reason to let someone go. ezworkspace makes catching up part of the job.**
 
-ezworkspace brings existing workers and new hires into AI-era work, as a cheaper, faster alternative to firing, re-hiring or courses. Workers text a private AI coach. Their employer signs a Compact before seeing anything. By Vi, SJSU Responsible Computing Club.
+**Show it once. AI onboards everyone.** The employer shows the AI how a task is done once (in the app, by voice, by video or with a doc link). The AI writes the SOP, then trains every employee step by step, by voice on the web or by text on iMessage. It's a cheaper, faster alternative to replacing or retraining people. By Vi, SJSU Responsible Computing Club.
+
+## Judge access (no account needed)
+
+| What | Where |
+|---|---|
+| Live app | https://ezworkspace.vercel.app |
+| Employer view (teach the AI) | On the landing page, click **"Try the employer demo, no sign-in"** (demo mode). You can also sign in with Google or GitHub. |
+| Employee view (training) | Click **"I'm an employee"**, or open https://ezworkspace.vercel.app/#/train. No sign-in. |
+| iMessage coach (Photon) | Text **START** to **+1 (415) 590-1577**. Ask the demo presenter for their iPhone: the shared Photon line only answers numbers registered on the project. |
+| Demo company app | https://ezworkspace.vercel.app/acme/index.html (AcmeAP, a fictional accounts-payable portal) |
+
+Demo mode (`DEMO_MODE=1` on the Convex deployment) is a hackathon shortcut that lets anyone act as a mock employer. It must be off for real users.
 
 ## The problem
 
