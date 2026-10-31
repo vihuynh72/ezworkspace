@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { DIVIDEND_PCT, payout, sealed, teamMap } from "./lib";
+import { pathOf, readiness, suggest } from "./paths";
 import { getTeam, requireCoo, teamCompact, teamLogs, teamWorkers } from "./util";
 
 // The only read the employer gets. Nothing per-person ever leaves this function.
@@ -29,6 +30,8 @@ export const overview = query({
       sealed: isSealed,
       plansIssued: isSealed ? null : workers.filter((w) => w.planAt !== undefined).length,
       practiceSessions: isSealed ? null : workers.reduce((sum, w) => sum + (w.practiced ?? 0), 0),
+      // Counts per guided path; 1-2 people show as null ("under 3"), never per person.
+      readiness: isSealed ? null : readiness(workers),
       map: isSealed ? null : teamMap(logs),
       payout: p && {
         quarterlySavings: p.quarterlySavings,
@@ -61,12 +64,9 @@ export const signCompact = mutation({
         to: w.phone,
         sent: !w.phone.startsWith("+"), // web-fallback workers read it in the browser, so iMessage skips it
         body:
-          `${team.company} just signed the ezworkspace Compact.\n\n` +
-          `Your Automation Dividend: about $${(perWorker.get(w._id) ?? 0).toLocaleString("en-US")} a quarter, ` +
-          `your share of the ${DIVIDEND_PCT}% of AI savings that goes to the people who found them. ` +
-          `You get paid before ezworkspace earns a cent.\n\n` +
-          `No Worker Worse Off: no pay cuts or AI layoffs for 12 months, and nothing you shared can be used against you.\n\n` +
-          `Text PLAN for your personal transition plan, or DELETE anytime.`,
+          `${team.company} just signed the ezworkspace Compact: no pay cuts or AI layoffs for 12 months. ` +
+          `Your share of what AI saves is about $${(perWorker.get(w._id) ?? 0).toLocaleString("en-US")} a quarter, ` +
+          `paid before ezworkspace earns a cent. ${suggest(pathOf(w).track, pathOf(w).step, false)}`,
       });
     }
     return null;
@@ -85,11 +85,8 @@ export const invite = mutation({
       to,
       sent: false,
       body:
-        `Hi! You're invited to ezworkspace, the private AI transition coach for ${team.company} ${team.name}.\n\n` +
-        `Will this be used to cut your job? No. Your team's map stays sealed until ${team.quorum} people join ` +
-        `and ${team.company} signs the Compact: nobody ends up worse off, and ${DIVIDEND_PCT}% of what AI saves goes to you.\n\n` +
-        `Tell me one thing you do every week and whether you use AI for it, like: ` +
-        `"I use ChatGPT to match invoices, it saves me 3 hours a week." Only you see your answers.`,
+        `Hi! You're invited to ezworkspace, a private AI coach for ${team.company} ${team.name}. ` +
+        `Will this be used to cut your job? No, and only you see what you tell me. ${suggest("transition", 1, false)}`,
     });
     return null;
   },

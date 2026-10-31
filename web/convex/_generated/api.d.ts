@@ -11,6 +11,7 @@
 import type * as ingest from "../ingest.js";
 import type * as lib from "../lib.js";
 import type * as outbox from "../outbox.js";
+import type * as paths from "../paths.js";
 import type * as registry from "../registry.js";
 import type * as seed from "../seed.js";
 import type * as team from "../team.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   ingest: typeof ingest;
   lib: typeof lib;
   outbox: typeof outbox;
+  paths: typeof paths;
   registry: typeof registry;
   seed: typeof seed;
   team: typeof team;

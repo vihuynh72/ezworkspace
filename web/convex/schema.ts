@@ -1,6 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+export const trackValidator = v.union(v.literal("transition"), v.literal("newhire"));
+
 export default defineSchema({
   teams: defineTable({
     name: v.string(),
@@ -16,6 +18,8 @@ export default defineSchema({
     planAt: v.optional(v.number()), // when this worker last got a transition plan
     mode: v.optional(v.literal("try")), // "try": their next text is a practice example, used once and never stored
     practiced: v.optional(v.number()), // TRY sessions finished
+    track: v.optional(trackValidator), // guided path (convex/paths.ts); unset means transition
+    step: v.optional(v.number()), // 1-based step on that path; past the last step means finished
   })
     .index("by_phone", ["phone"])
     .index("by_team", ["teamId"]),

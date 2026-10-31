@@ -1,9 +1,28 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
-import { DIVIDEND_PCT } from "./lib";
-import { getTeam, teamCompact, teamWorkers } from "./util";
+import type { Doc } from "./_generated/dataModel";
+import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
+import { sealed, teamMap } from "./lib";
+import { nextStep, pathOf, type Done } from "./paths";
+import { trackValidator } from "./schema";
+import { getTeam, teamCompact, teamLogs, teamWorkers } from "./util";
 
-// Saves one text as a private log and returns the reply. Only ingest.text calls this.
+// Finds the worker by phone, or adds them: their first text makes them a voice.
+async function join(ctx: MutationCtx, phone: string) {
+  const found = await ctx.db.query("workers").withIndex("by_phone", (q) => q.eq("phone", phone)).unique();
+  if (found) return found;
+  const team = await getTeam(ctx);
+  return (await ctx.db.get("workers", await ctx.db.insert("workers", { teamId: team._id, phone, seeded: false })))!;
+}
+
+// Moves the worker one step along their path when this turn finishes the current step.
+async function advance(ctx: MutationCtx, w: Doc<"workers"> | null, done: Done | null, patch: Partial<Doc<"workers">> = {}) {
+  const { track, step: from } = pathOf(w);
+  const step = nextStep(track, from, done);
+  if (w) await ctx.db.patch("workers", w._id, { ...patch, track, step });
+  return { track, step, advanced: step > from };
+}
+
+// Saves one work log privately and moves the path on. Only ingest calls this.
 export const store = internalMutation({
   args: {
     phone: v.string(),
@@ -15,43 +34,14 @@ export const store = internalMutation({
     keepHuman: v.boolean(),
     originator: v.boolean(),
   },
-  handler: async (ctx, { phone, isWork, ...log }): Promise<string> => {
-    const team = await getTeam(ctx);
-    const existing = await ctx.db.query("workers").withIndex("by_phone", (q) => q.eq("phone", phone)).unique();
-    const workerId = existing?._id ?? (await ctx.db.insert("workers", { teamId: team._id, phone, seeded: false }));
-    if (isWork) await ctx.db.insert("logs", { teamId: team._id, workerId, ...log, task: log.task.slice(0, 80) });
-
-    const voices = (await teamWorkers(ctx, team._id)).length;
-    const signed = (await teamCompact(ctx, team._id)) !== null;
-    const status =
-      voices < team.quorum
-        ? `Team: ${voices}/${team.quorum} voices. Your team's map stays sealed until ${team.quorum - voices} more join.`
-        : !signed
-          ? `Team: ${voices}/${team.quorum} voices, quorum reached. The map stays sealed until ${team.company} signs the Compact, which pays you ${DIVIDEND_PCT}% of what AI saves.`
-          : `${team.company} has signed the Compact. Your dividend grows as your team logs more.`;
-
-    if (!isWork) {
-      return (
-        `Hi! This is ezworkspace, your private AI transition coach at ${team.company}.\n\n` +
-        `Will this be used to cut your job? No. Under the ezworkspace Compact nobody ends up worse off: ` +
-        `no pay cuts or AI layoffs for 12 months, and ${DIVIDEND_PCT}% of what AI saves goes to the people who found it.\n\n` +
-        `Tell me one thing you do every week and whether AI helps with it, like ` +
-        `"ChatGPT drafts my vendor emails, saves 2 hours a week." Only you see what you send.\n\n${status}`
-      );
-    }
-    const hrs = Math.round(log.minutesPerWeek / 6) / 10;
-    const detail = log.keepHuman
-      ? `Marked keep-human: "${log.task}" stays yours.`
-      : `"${log.task}": about ${hrs} hrs/week${log.tool ? ` with ${log.tool}` : ""}.` +
-        (log.originator ? " You're credited as the originator of this shortcut." : "");
-    return (
-      `Saved privately. Only you can see this.\n\n${detail}\n\n${status}\n` +
-      `Text PLAN for your personal transition plan, or DELETE to erase everything.`
-    );
+  handler: async (ctx, { phone, isWork, ...log }) => {
+    const w = await join(ctx, phone);
+    if (isWork) await ctx.db.insert("logs", { teamId: w.teamId, workerId: w._id, ...log, task: log.task.slice(0, 80) });
+    return advance(ctx, w, isWork ? "log" : null);
   },
 });
 
-// A worker's own logs, for their private transition plan. Only ingest.text calls this.
+// Everything the coach knows about one worker: their own logs and path, plus team totals. Only ingest calls this.
 export const mine = internalQuery({
   args: { phone: v.string() },
   handler: async (ctx, { phone }) => {
@@ -61,24 +51,43 @@ export const mine = internalQuery({
       ? await ctx.db.query("logs").withIndex("by_worker", (q) => q.eq("workerId", worker._id)).take(50)
       : [];
     const signed = (await teamCompact(ctx, team._id)) !== null;
+    const voices = (await teamWorkers(ctx, team._id)).length;
+    // How the team uses AI, for new hires: the same aggregates the employer sees, so nothing while sealed.
+    const map = sealed(voices, team.quorum, signed) ? null : teamMap(await teamLogs(ctx, team._id));
     return {
       workerId: worker?._id ?? null,
       mode: worker?.mode ?? null,
+      ...pathOf(worker),
       team: `${team.company} ${team.name}`,
       signed,
-      voices: (await teamWorkers(ctx, team._id)).length,
+      voices,
       quorum: team.quorum,
       logs: logs.map(({ task, category, tool, minutesPerWeek, keepHuman }) => ({ task, category, tool, minutesPerWeek, keepHuman })),
+      playbook: map && {
+        ai: map.categories.filter((c) => c.hoursPerWeek > 0).slice(0, 3).map((c) => c.category),
+        keep: map.keepList.slice(0, 3),
+      },
     };
+  },
+});
+
+// Saying you're new switches to the new-hire path; the same path resumes where it was.
+export const begin = internalMutation({
+  args: { phone: v.string(), track: v.optional(trackValidator) },
+  handler: async (ctx, { phone, track }) => {
+    const w = await join(ctx, phone);
+    if (track && track !== pathOf(w).track) {
+      await ctx.db.patch("workers", w._id, { track, step: 1 });
+      return { workerId: w._id, track, step: 1 };
+    }
+    return { workerId: w._id, ...pathOf(w) };
   },
 });
 
 export const markPlan = internalMutation({
   args: { workerId: v.id("workers") },
-  handler: async (ctx, { workerId }) => {
-    await ctx.db.patch("workers", workerId, { planAt: Date.now() });
-    return null;
-  },
+  handler: async (ctx, { workerId }) =>
+    advance(ctx, await ctx.db.get("workers", workerId), "plan", { planAt: Date.now() }),
 });
 
 // "TRY": the worker's next text is a practice example.
@@ -94,14 +103,11 @@ export const startTry = internalMutation({
 export const endTry = internalMutation({
   args: { workerId: v.id("workers"), practiced: v.boolean() },
   handler: async (ctx, { workerId, practiced }) => {
-    const worker = await ctx.db.get("workers", workerId);
-    if (worker) {
-      await ctx.db.patch("workers", workerId, {
-        mode: undefined,
-        practiced: (worker.practiced ?? 0) + (practiced ? 1 : 0),
-      });
-    }
-    return null;
+    const w = await ctx.db.get("workers", workerId);
+    return advance(ctx, w, practiced ? "try" : null, {
+      mode: undefined,
+      practiced: (w?.practiced ?? 0) + (practiced ? 1 : 0),
+    });
   },
 });
 
