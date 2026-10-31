@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-30T19:05:00-07:00",
+  "title": "Design System: ezworkspace",
+  "extensions": {
+    "colorMeta": {
+      "sign-charcoal": { "role": "primary", "displayName": "Sign Charcoal", "canonical": "hsl(204 16% 15%)", "tonalRamp": ["#0d1012", "#151a1d", "#20272c", "#353f45", "#56626a", "#8b969c", "#c3cacf", "#eef1f3"] },
+      "signal-yellow": { "role": "secondary", "displayName": "Wayfinding Yellow", "canonical": "hsl(46 100% 54%)", "tonalRamp": ["#3d2f00", "#6b5200", "#a37d00", "#d9a700", "#ffc814", "#ffd65c", "#ffe7a3", "#fff6db"] },
+      "route-green": { "role": "secondary", "displayName": "Route Green", "canonical": "hsl(153 64% 26%)", "tonalRamp": ["#082416", "#0f3d27", "#186d47", "#23935f", "#4fb886", "#8fd4b1", "#c6ead7", "#e6f4ed"] },
+      "review-amber": { "role": "tertiary", "displayName": "Review Amber", "canonical": "hsl(34 92% 29%)", "tonalRamp": ["#2e1b02", "#5a3504", "#8e5306", "#c27a12", "#e8a640", "#f5cc85", "#fde6bd", "#fff3d1"] },
+      "stop-red": { "role": "tertiary", "displayName": "Stop Red", "canonical": "hsl(4 72% 40%)", "tonalRamp": ["#3a0c09", "#661611", "#af261d", "#d0463b", "#e47a71", "#f0aaa4", "#f8d5d2", "#fdeeed"] },
+      "concourse": { "role": "neutral", "displayName": "Concourse", "canonical": "hsl(204 14% 96%)", "tonalRamp": ["#192024", "#363f45", "#525b60", "#8b969c", "#d7dce0", "#e8ebed", "#f3f5f6", "#ffffff"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "hsl(204 18% 12%)" },
+      "muted-ink": { "role": "neutral", "displayName": "Muted Ink", "canonical": "hsl(204 8% 35%)" },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "hsl(204 12% 86%)" },
+      "control-edge": { "role": "neutral", "displayName": "Control Edge", "canonical": "hsl(204 8% 58%)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The signed-out promise only." },
+      "count": { "displayName": "Count", "purpose": "Voices counter on the route strip; tabular figures." },
+      "figure": { "displayName": "Figure", "purpose": "The map's hours-per-week total." },
+      "title": { "displayName": "Title", "purpose": "Panel headings." },
+      "body": { "displayName": "Body", "purpose": "Prose and descriptions." },
+      "body-dense": { "displayName": "Body Dense", "purpose": "Dashboard rows, Compact terms, tables." },
+      "chat": { "displayName": "Chat", "purpose": "Chat bubbles on phones (1rem from 640px)." },
+      "label": { "displayName": "Label", "purpose": "Form labels, stop names, plates, chips." }
+    },
+    "shadows": [
+      { "name": "panel", "value": "0 1px 3px hsl(204 30% 20% / 0.06)", "purpose": "Whisper lift for white panels on the concourse." },
+      { "name": "hanging-sign", "value": "0 8px 20px -6px hsl(204 30% 12% / 0.45)", "purpose": "The Sealed sign hanging over a hatched area." },
+      { "name": "focus", "value": "0 0 0 2px hsl(46 100% 54%)", "purpose": "Yellow inner focus ring under a 2px ink outline at 2px offset." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Every entrance and state change." },
+      { "name": "rise", "value": "450ms ease-out-expo", "purpose": "New content and the next-step plate arriving." },
+      { "name": "pop-halo", "value": "500ms pop + 1.4s green halo x2", "purpose": "A voice that joins while the dashboard is open." },
+      { "name": "grow-x", "value": "900ms ease-out-expo, 450ms stagger", "purpose": "Payout bars in order, workers first." },
+      { "name": "stamp", "value": "350ms ease-out-expo", "purpose": "The signed stamp replacing the Sign button." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action of a panel, such as Sign as <name>.",
+      "html": "<button class=\"ds-btn-primary\">Sign as Vi Huynh</button>",
+      "css": ".ds-btn-primary { background: #20272c; color: #fff; height: 44px; padding: 0 16px; border: 0; border-radius: 6px; font: 600 16px 'Atkinson Hyperlegible Next', system-ui, sans-serif; transition: background-color 150ms; cursor: pointer; } .ds-btn-primary:hover { background: rgba(32,39,44,0.9); } .ds-btn-primary:focus-visible { outline: 2px solid #192024; outline-offset: 2px; box-shadow: 0 0 0 2px #ffc814; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions: Show me who said what, Send invite.",
+      "html": "<button class=\"ds-btn-outline\">Send invite</button>",
+      "css": ".ds-btn-outline { background: #fff; color: #192024; height: 40px; padding: 0 16px; border: 1px solid #8b969c; border-radius: 6px; font: 600 14px 'Atkinson Hyperlegible Next', system-ui, sans-serif; transition: background-color 150ms; cursor: pointer; } .ds-btn-outline:hover { background: #e8ebed; } .ds-btn-outline:focus-visible { outline: 2px solid #192024; outline-offset: 2px; box-shadow: 0 0 0 2px #ffc814; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labeled field with the label above.",
+      "html": "<label class=\"ds-label\">Mobile number<input class=\"ds-input\" placeholder=\"+1 415 555 0123\"></label>",
+      "css": ".ds-label { display: grid; gap: 4px; font: 600 14px 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: #192024; } .ds-input { height: 40px; padding: 0 12px; border: 1px solid #8b969c; border-radius: 6px; font: 400 16px 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: #192024; background: #fff; } .ds-input::placeholder { color: #525b60; } .ds-input:focus-visible { outline: 2px solid #192024; outline-offset: 2px; box-shadow: 0 0 0 2px #ffc814; }"
+    },
+    {
+      "name": "Next-Step Plate",
+      "kind": "custom",
+      "refersTo": "next-plate",
+      "description": "The single yellow plate that says what happens next on the route.",
+      "html": "<span class=\"ds-next\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 15 15\" fill=\"none\"><path d=\"M8.15 3.15a.5.5 0 0 1 .7 0l4 4a.5.5 0 0 1 0 .7l-4 4a.5.5 0 0 1-.7-.7L11.29 8H2.5a.5.5 0 0 1 0-1h8.79L8.15 3.85a.5.5 0 0 1 0-.7Z\" fill=\"currentColor\"/></svg>1 more voice needed</span>",
+      "css": ".ds-next { display: inline-flex; align-items: center; gap: 6px; background: #ffc814; color: #192024; padding: 4px 8px; border-radius: 6px; font: 700 14px/1.25 'Atkinson Hyperlegible Next', system-ui, sans-serif; }"
+    },
+    {
+      "name": "Route",
+      "kind": "custom",
+      "refersTo": "route",
+      "description": "Voice dots, then interchange stops; traveled segments green, the road ahead dashed.",
+      "html": "<div class=\"ds-route\"><span class=\"ds-dot on\"></span><span class=\"ds-seg on\"></span><span class=\"ds-dot on\"></span><span class=\"ds-seg\"></span><span class=\"ds-dot\"></span><span class=\"ds-line\"></span><span class=\"ds-stop\"></span><span class=\"ds-line\"></span><span class=\"ds-stop\"></span></div>",
+      "css": ".ds-route { display: flex; align-items: center; width: 420px; } .ds-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px dashed #8b969c; background: #fff; box-sizing: border-box; flex: none; } .ds-dot.on { border: 2px solid #186d47; background: #186d47; } .ds-seg, .ds-line { height: 4px; border-radius: 999px; background: repeating-linear-gradient(90deg, #8b969c 0 6px, transparent 6px 11px); } .ds-seg { width: 20px; flex: none; } .ds-line { flex: 1; margin: 0 12px; } .ds-seg.on { background: #186d47; } .ds-stop { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #20272c; background: #fff; box-sizing: border-box; flex: none; }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "White work area on the concourse; never nested.",
+      "html": "<section class=\"ds-panel\"><h2>Who gets paid first</h2><p>Amounts appear when the map opens.</p></section>",
+      "css": ".ds-panel { background: #fff; border: 1px solid #d7dce0; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px hsl(204 30% 20% / 0.06); font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: #192024; } .ds-panel h2 { margin: 0; font-size: 18px; font-weight: 700; } .ds-panel p { margin: 2px 0 0; font-size: 14px; color: #525b60; }"
+    },
+    {
+      "name": "Suggestion Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "One-tap replies above the chat composer.",
+      "html": "<button class=\"ds-chip\">What can AI do for my job?</button>",
+      "css": ".ds-chip { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #8b969c; background: #fff; color: #192024; font: 600 15px 'Atkinson Hyperlegible Next', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms; } .ds-chip:hover { background: #edf0f2; } .ds-chip:focus-visible { outline: 2px solid #192024; outline-offset: 2px; box-shadow: 0 0 0 2px #ffc814; }"
+    },
+    {
+      "name": "Chat Bubbles",
+      "kind": "custom",
+      "refersTo": "bubble-coach",
+      "description": "Coach bubbles in muted gray with a Listen control; the worker's own in charcoal.",
+      "html": "<div class=\"ds-chat\"><p class=\"ds-coach\">Will this be used to cut your job? No.</p><p class=\"ds-me\">PLAN</p></div>",
+      "css": ".ds-chat { display: flex; flex-direction: column; gap: 8px; width: 320px; font: 400 17px/1.375 'Atkinson Hyperlegible Next', system-ui, sans-serif; } .ds-coach, .ds-me { margin: 0; padding: 10px 16px; border-radius: 20px; max-width: 85%; } .ds-coach { align-self: flex-start; background: #edf0f2; color: #192024; border-bottom-left-radius: 6px; } .ds-me { align-self: flex-end; background: #20272c; color: #fff; border-bottom-right-radius: 6px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Signposted Route",
+    "overview": "ezworkspace borrows from airport and hospital wayfinding: signage built for stressed people who are not experts and have no time. Every screen answers three questions in plain words: where are we, what happens next, and what is closed off. The COO dashboard, the worker chat, and the signed-out page share one band of sign charcoal, one face designed for legibility, and one route line that carries the product's mechanism (workers join, the COO signs, the map opens).\n\nThe world lends type, palette, density, and one signature move. Layout, navigation, and controls stay the standard ones for web apps: panels, tables, buttons, inputs, a chat composer. Calm comes from restraint in color, not from emptiness: color only ever reports state.",
+    "keyCharacteristics": [
+      "A charcoal overhead-sign band on every surface, wordmark in lowercase bold.",
+      "The route line: voice dots and interchange stops, traveled segments solid green, the road ahead dashed gray.",
+      "A yellow plate with an arrow marks the single next step, never more than one at a time.",
+      "Diagonal hatch marks areas that exist but are sealed.",
+      "One face, Atkinson Hyperlegible Next, whose slashed zero and open shapes are kept on purpose."
+    ],
+    "rules": [
+      { "name": "The One Yellow Rule", "body": "Yellow marks only what happens next and keyboard focus. If two yellow plates are on screen, one is wrong.", "section": "colors" },
+      { "name": "The Fixed Legend Rule", "body": "Green is done or paid to workers, yellow is next, amber needs a human, red is destructive or an error. Every state also carries an icon or a word, so color is never the only signal.", "section": "colors" },
+      { "name": "The One Face Rule", "body": "One family carries everything. Hierarchy comes from weight and size steps, never from a second display face or a monospace costume.", "section": "typography" },
+      { "name": "The Sign Not Card Rule", "body": "Anything laid over a closed area is a charcoal sign plate, never a bordered card nested inside a panel.", "section": "elevation" },
+      { "name": "The Hatch Means Closed Rule", "body": "A diagonal 1.5px hatch every 11px marks an area that exists but is sealed: the map before both keys turn, the payout bars before amounts are public. Never used as texture.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do say the next step in plain words on a yellow plate, one at a time.",
+      "Do replace a completed control with its stamp in place (Sign button becomes \"Signed by ... at ...\").",
+      "Do pair every state color with an icon or word.",
+      "Do keep money to workers in route green and list it first."
+    ],
+    "donts": [
+      "Don't use yellow for decoration, highlights, or a second meaning.",
+      "Don't nest a bordered card inside a panel; hang a charcoal sign instead.",
+      "Don't add a second typeface, gradient text, glass, or colored side stripes.",
+      "Don't use AI jargon (model, prompt, token) in worker-facing copy."
+    ]
+  }
+}
