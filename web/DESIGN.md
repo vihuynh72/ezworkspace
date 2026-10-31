@@ -23,6 +23,35 @@ typography:
     fontWeight: 700
     lineHeight: 1.04
     letterSpacing: "-0.03em"
+  display-phone:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "2.75rem"
+    fontWeight: 700
+    lineHeight: 1.04
+    letterSpacing: "-0.03em"
+  promise:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "2.25rem"
+    fontWeight: 700
+    lineHeight: 1.25
+    letterSpacing: "-0.02em"
+  promise-phone:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 700
+    lineHeight: 1.25
+    letterSpacing: "-0.02em"
+  lede:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.375rem"
+    fontWeight: 400
+    lineHeight: 1.5
+  section:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 700
+    lineHeight: 1.4
+    letterSpacing: "-0.01em"
   count:
     fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "3.75rem"
@@ -65,6 +94,16 @@ typography:
     fontSize: "0.875rem"
     fontWeight: 600
     lineHeight: 1.25
+  caption:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.43
+  micro:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 600
+    lineHeight: 1.385
 rounded:
   sm: "4px"
   md: "6px"
@@ -185,8 +224,12 @@ Restrained: tinted neutrals carry the surface; four state colors each mean exact
 
 **Character:** a humanist sans drawn so that confusable characters (I, l, 1, 0, O) never collide. Its slashed zero reads as a legibility mark, familiar from forms and checks in accounts payable.
 
+**Why this face stays (typeset review, Oct 30).** The brief asks for enterprise-grade, calm, and readable at arm's length and on phones, by people with no AI background. A face drawn by the Braille Institute for exactly that reader beats a fashionable neutral sans (Inter and its kin read as default). It is self-hosted, one 34KB variable file, preloaded, `font-display: swap`. The fix was the scale, not the face.
+
 ### Hierarchy
 - **Display** (700, 4rem, 1.04, -0.03em): the signed-out promise only. 2.75rem on phones.
+- **Promise** (700, 2.25rem, -0.02em; 1.75rem on phones) and **Lede** (400, 1.375rem, 1.5; 1.25rem on phones, muted ink, 40ch): the hero's second line and its one sentence of support.
+- **Section** (700, 1.25rem, -0.01em): titles of the signed-out page's sections, one step above the item titles they hold.
 - **Count** (700, 3.75rem, tabular): the voices counter on the route strip.
 - **Figure** (700, 1.875rem, tabular): the map's hours-per-week total.
 - **Title** (700, 1.125rem): panel headings.
@@ -194,6 +237,10 @@ Restrained: tinted neutrals carry the surface; four state colors each mean exact
 - **Body** (400, 1rem, 1.5) and **Body Dense** (400, 0.9375rem, 1.375): prose, dashboard rows, and panel descriptions (75% ink), 65 to 75ch for prose.
 - **Chat** (400, 1.0625rem): bubbles on phones, 1rem from 640px up.
 - **Label** (600, 0.875rem): form labels and small buttons.
+- **Caption** (400, 0.875rem, muted ink): stop captions, timestamps, helper text.
+- **Micro** (600, 0.8125rem): badges, tooltips, small buttons. The floor: nothing renders under 13px, because readers may be older or on a small phone.
+- **Figures:** counts and money use tabular numerals (`tabular-nums`; table cells get them by default). Steps from 1.5rem up (2xl, 3xl, 6xl) carry -0.02em tracking in the Tailwind tokens, so big numbers set tight without per-element classes.
+- **Wrapping:** headings balance, paragraphs and list items wrap `pretty` so no line ends on one stranded word.
 
 ### Named Rules
 **The One Face Rule.** One family carries everything. Hierarchy comes from weight and size steps, never from a second display face or a monospace costume.

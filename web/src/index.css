@@ -86,6 +86,17 @@
   h3 {
     text-wrap: balance;
   }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  /* Figures in rows line up digit for digit. */
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer utilities {

@@ -1,5 +1,9 @@
+import { rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { ConvexClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
+import { ConvexError } from "convex/values";
 import { Spectrum, attachment, type Space } from "spectrum-ts";
 import { effect, imessage } from "spectrum-ts/providers/imessage";
 
@@ -10,6 +14,11 @@ const ingestText = makeFunctionReference<"action", { secret: string; from: strin
 const outboxPending = makeFunctionReference<"query", { secret: string }, OutboxRow[]>("outbox:pending");
 const outboxMarkSent = makeFunctionReference<"mutation", { secret: string; id: string }>("outbox:markSent");
 const speakAgent = makeFunctionReference<"action", { secret: string; text: string }, string>("voice:speakAgent");
+const visionAgent = makeFunctionReference<
+  "action",
+  { secret: string; from: string; imageBase64: string; mimeType: string },
+  string
+>("vision:visionAgent");
 
 const convex = new ConvexClient(process.env.CONVEX_URL!);
 const secret = process.env.AGENT_SECRET!;
@@ -53,6 +62,44 @@ async function handleText(space: Space, from: string, body: string) {
   } catch (err) {
     console.error(`[inbound] ${from}:`, err);
     await space.send("ezworkspace hit a snag — try again in a sec.").catch(console.error);
+  } finally {
+    await space.stopTyping().catch(() => {});
+  }
+}
+
+// iPhone photos arrive as HEIC, which Claude can't read. macOS sips makes a JPEG of at most 1600px.
+// The temp files are deleted right away: nothing from a photo is kept.
+async function toJpeg(bytes: Buffer): Promise<Buffer> {
+  const base = join(tmpdir(), `ezw-${crypto.randomUUID()}`);
+  try {
+    await Bun.write(`${base}.in`, bytes);
+    const sips = Bun.spawn(["sips", "-Z", "1600", "-s", "format", "jpeg", `${base}.in`, "--out", `${base}.jpg`], {
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    if ((await sips.exited) !== 0) throw new Error("sips failed");
+    return Buffer.from(await Bun.file(`${base}.jpg`).arrayBuffer());
+  } finally {
+    await Promise.all([rm(`${base}.in`, { force: true }), rm(`${base}.jpg`, { force: true })]);
+  }
+}
+
+async function handlePhoto(space: Space, from: string, photo: { read(): Promise<Buffer>; mimeType: string }) {
+  await space.startTyping().catch(() => {});
+  try {
+    const raw = await photo.read();
+    const jpeg = await toJpeg(raw).catch(() => null); // not on a Mac: send as is, Convex checks the type
+    const reply = await convex.action(visionAgent, {
+      secret,
+      from,
+      imageBase64: (jpeg ?? raw).toString("base64"),
+      mimeType: jpeg ? "image/jpeg" : photo.mimeType,
+    });
+    if (reply) await space.send(reply);
+  } catch (err) {
+    console.error(`[photo] ${from}:`, err instanceof Error ? err.message : err);
+    const reply = err instanceof ConvexError ? String(err.data) : "Thanks! I can read photos in the web chat for now.";
+    await space.send(reply).catch(console.error);
   } finally {
     await space.stopTyping().catch(() => {});
   }
@@ -151,6 +198,9 @@ for await (const [space, message] of app.messages) {
   if (content.type === "text") {
     spaces.set(from, space);
     enqueue(from, () => handleText(space, from, content.text));
+  } else if (content.type === "attachment" && content.mimeType.startsWith("image/")) {
+    spaces.set(from, space);
+    enqueue(from, () => handlePhoto(space, from, content));
   } else if (content.type === "voice" || (content.type === "attachment" && content.mimeType.startsWith("audio/"))) {
     spaces.set(from, space);
     enqueue(from, () => space.send(VOICE_MEMO_REPLY).then(() => {}));

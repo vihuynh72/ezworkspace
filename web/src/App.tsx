@@ -56,7 +56,7 @@ function Hero() {
           </div>
         </div>
         <section aria-labelledby="guarantees-title" className="lg:col-span-5 lg:self-center">
-          <h2 id="guarantees-title" className="text-lg font-bold">
+          <h2 id="guarantees-title" className="text-xl font-bold tracking-[-0.01em]">
             What every worker is promised
           </h2>
           <ul className="mt-3 divide-y border-y">
@@ -74,7 +74,7 @@ function Hero() {
       </main>
       <section aria-labelledby="route-title" className="border-t bg-card">
         <div className="mx-auto max-w-[1200px] px-4 py-7 sm:px-8">
-          <h2 id="route-title" className="text-lg font-bold">
+          <h2 id="route-title" className="text-xl font-bold tracking-[-0.01em]">
             How the team map opens
           </h2>
           <ol className="mt-4 grid gap-4 sm:grid-cols-[auto_minmax(16px,1fr)_auto_minmax(16px,1fr)_auto] sm:items-start sm:gap-x-3">

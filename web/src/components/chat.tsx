@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import {
+  CameraIcon,
   ExclamationTriangleIcon,
   KeyboardIcon,
   LockClosedIcon,
@@ -14,7 +15,8 @@ import { ConvexError } from "convex/values";
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../../convex/_generated/api";
 
-type Msg = { id: string; role: "me" | "coach"; body: string; at: number };
+// image: a data URL shown only this session; photos are never saved, even on this device.
+type Msg = { id: string; role: "me" | "coach"; body: string; at: number; image?: string };
 type Saved = { messages: Msg[]; seen: string[]; chatted: boolean };
 
 const WELCOME: Msg[] = [
@@ -95,6 +97,24 @@ function loadChat(): Saved {
   return { messages: [], seen: [], chatted: false };
 }
 
+// Phone photos are 3-12 MB; a 1600px JPEG keeps the text readable and the upload small.
+async function shrink(file: File): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 const failure = (e: unknown, fallback: string) => (e instanceof ConvexError ? String(e.data) : fallback);
 
@@ -110,13 +130,18 @@ export function Chat() {
   const [heard, setHeard] = useState("");
   const [readAloud, setReadAloud] = useState(() => load("ezw.readAloud") !== "off");
   const sendToCoach = useAction(api.ingest.web);
+  const coachPhoto = useAction(api.vision.coach);
+  const photoRef = useRef<HTMLInputElement>(null);
   const inbox = useQuery(api.outbox.webInbox, { deviceId });
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const rec = useRef<Recognition | null>(null);
   const voice = useVoice(deviceId, setError);
 
-  useEffect(() => save("ezw.chat.v1", JSON.stringify({ ...chat, messages: chat.messages.slice(-100) })), [chat]);
+  useEffect(() => {
+    const messages = chat.messages.slice(-100).map((m) => (m.image ? { ...m, image: undefined, body: m.body || "Sent a photo" } : m));
+    save("ezw.chat.v1", JSON.stringify({ ...chat, messages }));
+  }, [chat]);
   useEffect(
     () => () => {
       const r = rec.current;
@@ -182,6 +207,45 @@ export function Chat() {
       setChat((c) => ({ ...c, messages: c.messages.filter((m) => m.id !== mine.id) }));
       setDraft(body);
       setError(failure(e, "Couldn't reach ezworkspace. Check your connection and try again."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  // Opens the camera or photo picker. Called inside the tap, so a read-aloud reply can play later on iOS.
+  function pickPhoto() {
+    if (!chat.chatted) return setError("Send your first message, then you can send a photo.");
+    hush();
+    voice.stop();
+    voice.unlock();
+    photoRef.current?.click();
+  }
+
+  async function sendPhoto(file: File) {
+    if (pending) return;
+    const note = typing ? draft.trim().slice(0, 500) : ""; // typed words go along as the question
+    setError("");
+    setPending(true);
+    let mine: Msg | null = null;
+    try {
+      const image = await shrink(file);
+      const shown: Msg = { id: newId(), role: "me", body: note, at: Date.now(), image };
+      mine = shown;
+      setChat((c) => ({ ...c, messages: [...c.messages, shown] }));
+      if (note) setDraft("");
+      const reply = await coachPhoto({
+        deviceId,
+        imageBase64: image.slice(image.indexOf(",") + 1),
+        mimeType: "image/jpeg",
+        ...(note ? { note } : {}),
+      });
+      const coach: Msg = { id: newId(), role: "coach", body: reply, at: Date.now() };
+      setChat((c) => ({ ...c, messages: [...c.messages, coach] }));
+      if (readAloud && !typing) void voice.play(coach);
+    } catch (e) {
+      if (mine) setChat((c) => ({ ...c, messages: c.messages.filter((m) => m.id !== mine?.id) }));
+      if (note) setDraft(note);
+      setError(failure(e, "Couldn't send that photo. Try again."));
     } finally {
       setPending(false);
     }
@@ -268,6 +332,7 @@ export function Chat() {
                 )}
               >
                 <span className="sr-only">You: </span>
+                {m.image && <img src={m.image} alt="Your photo" className="mb-1 block max-h-64 w-auto rounded-xl last:mb-0" />}
                 {m.body}
               </p>
             ) : (
@@ -331,6 +396,18 @@ export function Chat() {
               </button>
             </li>
           </ul>
+          <input
+            ref={photoRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = ""; // the same photo can be picked again
+              if (file) void sendPhoto(file);
+            }}
+          />
           {error && (
             <p role="alert" className="flex items-start gap-1.5 px-4 pb-2 text-sm font-semibold text-destructive">
               <ExclamationTriangleIcon aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
@@ -359,6 +436,15 @@ export function Chat() {
                   <MicIcon className="h-5 w-5" />
                 </button>
               )}
+              <button
+                type="button"
+                aria-label="Send a photo"
+                disabled={pending}
+                onClick={pickPhoto}
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-input transition-colors duration-150 hover:bg-muted disabled:opacity-50"
+              >
+                <CameraIcon aria-hidden className="h-5 w-5" />
+              </button>
               <label htmlFor="chat-input" className="sr-only">
                 Message ezworkspace
               </label>
@@ -418,15 +504,20 @@ export function Chat() {
                       : "Tap the mic and talk."}
               </p>
               <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center justify-items-center">
-                <DockButton
-                  label="Type"
-                  onClick={() => {
-                    hush();
-                    setTyping(true);
-                  }}
-                >
-                  <KeyboardIcon aria-hidden className="h-5 w-5" />
-                </DockButton>
+                <div className="flex gap-3">
+                  <DockButton
+                    label="Type"
+                    onClick={() => {
+                      hush();
+                      setTyping(true);
+                    }}
+                  >
+                    <KeyboardIcon aria-hidden className="h-5 w-5" />
+                  </DockButton>
+                  <DockButton label="Photo" disabled={pending} onClick={pickPhoto}>
+                    <CameraIcon aria-hidden className="h-5 w-5" />
+                  </DockButton>
+                </div>
                 <button
                   type="button"
                   aria-label="Talk"
@@ -507,11 +598,13 @@ function MicIcon({ className }: { className?: string }) {
 function DockButton({
   label,
   pressed,
+  disabled,
   onClick,
   children,
 }: {
   label: string;
   pressed?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -519,8 +612,9 @@ function DockButton({
     <button
       type="button"
       aria-pressed={pressed}
+      disabled={disabled}
       onClick={onClick}
-      className="flex flex-col items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-sm font-semibold leading-tight text-muted-foreground transition-colors duration-150 hover:text-foreground"
+      className="flex flex-col items-center gap-1 whitespace-nowrap rounded-md px-1 py-0.5 text-sm font-semibold leading-tight text-muted-foreground transition-colors duration-150 hover:text-foreground disabled:opacity-50"
     >
       <span
         className={cn(

@@ -13,6 +13,13 @@ module.exports = {
       fontFamily: {
         sans: ['"Atkinson Hyperlegible Next"', "system-ui", "-apple-system", '"Segoe UI"', "sans-serif"],
       },
+      // Readers may be older or on small phones: nothing under 13px. Big figures track tight, like the hero.
+      fontSize: {
+        xs: ["0.8125rem", { lineHeight: "1.125rem" }],
+        "2xl": ["1.5rem", { lineHeight: "2rem", letterSpacing: "-0.02em" }],
+        "3xl": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.02em" }],
+        "6xl": ["3.75rem", { lineHeight: "1", letterSpacing: "-0.02em" }],
+      },
       colors: {
         signal: {
           DEFAULT: "hsl(var(--signal))",

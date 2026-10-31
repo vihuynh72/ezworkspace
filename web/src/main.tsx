@@ -5,12 +5,13 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { Chat } from "./components/chat";
+import { Me } from "./components/me";
 import { ErrorBoundary } from "./ErrorBoundary";
 import "./index.css";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
-// #/text is the worker chat; everything else is the COO side.
+// #/text is the worker chat, #/me their private dashboard; everything else is the COO side.
 function Route() {
   const [hash, setHash] = useState(window.location.hash);
   useEffect(() => {
@@ -18,7 +19,7 @@ function Route() {
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
-  return hash.startsWith("#/text") ? <Chat /> : <App />;
+  return hash.startsWith("#/me") ? <Me /> : hash.startsWith("#/text") ? <Chat /> : <App />;
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

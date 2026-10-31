@@ -18,6 +18,7 @@ import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../../convex/_generated/api";
+import { Knowledge } from "./knowledge";
 import { Connector, DonePlate, NextPlate, SignBand, StopCircle, VoiceDot } from "./route";
 import { compactTerms } from "./terms";
 
@@ -29,7 +30,7 @@ const hours = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 
 const pct = (share: number) => `${Math.round(share * 100)}%`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 // Backend ConvexErrors carry user-facing text ("Enter a phone number like ..."); anything else gets the fallback.
-const errorText = (e: unknown, fallback: string) => (e instanceof ConvexError ? String(e.data) : fallback);
+export const errorText = (e: unknown, fallback: string) => (e instanceof ConvexError ? String(e.data) : fallback);
 const NEBULA_URL = import.meta.env.VITE_NEBULA_URL as string | undefined;
 
 export function Dashboard() {
@@ -86,10 +87,16 @@ export function DashboardView({ data }: { data: Overview }) {
         />
         <TeamMap data={data} className="lg:col-span-5" />
         <ValuePanel value={data.value} className="lg:col-span-3" />
-        <Playbooks playbooks={data.playbooks} className="lg:col-span-8" />
-        <Readiness data={data} className="lg:col-span-4" />
-        <Registry className="lg:col-span-8" />
-        <Invite className="lg:col-span-4" />
+        {/* Two independent columns, so a tall panel never leaves a hole beside it. */}
+        <div className="grid gap-4 lg:col-span-8">
+          <Playbooks playbooks={data.playbooks} />
+          <Knowledge />
+          <Registry />
+        </div>
+        <div className="grid gap-4 lg:col-span-4">
+          <Readiness data={data} />
+          <Invite />
+        </div>
       </main>
       <footer className="mx-auto flex max-w-[1376px] flex-wrap items-center justify-between gap-4 px-4 pb-8 pt-2 sm:px-8">
         <a
@@ -108,7 +115,7 @@ export function DashboardView({ data }: { data: Overview }) {
   );
 }
 
-function Panel({
+export function Panel({
   id,
   title,
   description,
@@ -837,7 +844,7 @@ function Invite({ className }: { className?: string }) {
   );
 }
 
-function InlineError({ children }: { children: ReactNode }) {
+export function InlineError({ children }: { children: ReactNode }) {
   return (
     <p role="alert" className="mt-2 flex items-start gap-1.5 text-sm font-semibold text-destructive">
       <ExclamationTriangleIcon aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
@@ -848,6 +855,28 @@ function InlineError({ children }: { children: ReactNode }) {
 
 function ResetDemo({ className }: { className?: string }) {
   const reset = useMutation(api.seed.reset);
+  return (
+    <ArmedButton
+      label="Reset demo"
+      armedLabel="Click again to reset all demo data"
+      onConfirm={() => void reset()}
+      className={className}
+    />
+  );
+}
+
+/** A destructive action: the first click arms it (stop red, explicit copy), the second runs it. Disarms after 4 seconds. */
+export function ArmedButton({
+  label,
+  armedLabel,
+  onConfirm,
+  className,
+}: {
+  label: ReactNode;
+  armedLabel: string;
+  onConfirm: () => void;
+  className?: string;
+}) {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!armed) return;
@@ -862,10 +891,10 @@ function ResetDemo({ className }: { className?: string }) {
       onBlur={() => setArmed(false)}
       onClick={() => {
         setArmed(!armed);
-        if (armed) void reset();
+        if (armed) onConfirm();
       }}
     >
-      {armed ? "Click again to reset all demo data" : "Reset demo"}
+      {armed ? armedLabel : label}
     </Button>
   );
 }
