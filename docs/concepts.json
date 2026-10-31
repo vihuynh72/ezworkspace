@@ -1,0 +1,298 @@
+[
+  {
+    "name": "Quorum",
+    "one_liner": "Workers privately text how they really use AI at work. The team's combined redesign map stays sealed until the company signs a contract that leaves no worker worse off and pays them a share of the savings.",
+    "problem": "A COO under an AI mandate cannot see how work actually gets done. Workers already use AI quietly (shadow AI) and hide it, because showing hours saved invites headcount cuts. So the best redesign data stays hidden. Leaders guess, workers resent the guessing, and top-down pilots lose employee trust. Neither side will move first.",
+    "payer": "The mid-sized employer (COO or VP Ops). It pays to unseal a team's map by signing the Quorum Compact, then pays a platform fee tied to the dividend workers receive.",
+    "primary_user": "Individual knowledge workers in ops, finance, support and similar teams at mid-sized companies. They use it free and privately over iMessage, before their employer is involved at all.",
+    "ethical_core": [
+      "Private by default in the data design: each log belongs to the worker's personal Clerk user, never to the employer org. The server never gives any admin a per-person row.",
+      "Quorum threshold: no team data is released until at least 5 workers contribute, and any task category with fewer than 3 contributors stays hidden. A Convex query enforces this on the server, not the UI.",
+      "Unsealing requires the Compact. Its Pareto floor is Harold's minimal requirement as a contract term: for 12 months, no affected worker's pay is cut and no role is cut without a funded transition. Workers must be at least as well off as without the change.",
+      "Shadow-AI amnesty is a contract term: nothing a worker discloses can be used for discipline, and disclosed savings are credited to the worker.",
+      "Each of the three hardships has a direct fix: income (pay floor plus dividend), well-being (workers' Keep List of tasks that stay human), resentment (credit, and a veto through the quorum).",
+      "Money flow: the platform fee is a percentage charged on top of the dividend paid out, not taken from it. Quorum earns more only when workers are paid more."
+    ],
+    "business_model": "Free for workers. Employers pay (1) an unseal fee per team per quarter, for example $1.5k, which buys the aggregate redesign map plus one supervised prototype workflow, and (2) a gainshare fee of about 15% on top of the automation dividend actually paid to workers. The dividend is a share of measured team cycle-time savings, for example 30%. A public 'Quorum Compact' badge and registry entry come with signing. Later: a premium registry tier for recruiting brands, and union or works-council licenses.",
+    "business_cycle": [
+      "1. Workers join free by texting a number a coworker shared. They get a private AI work coach that helps them do their real tasks better, and their logs build up as a side effect.",
+      "2. When a team reaches quorum (5 or more voices), the employer gets one message: 'Your team holds a sealed redesign map: 41 hrs/week, 6 workflows. Terms attached.'",
+      "3. The COO signs the Compact to unseal it. The redesign proceeds with workers' Keep List and their consent built in, and a supervised prototype ships.",
+      "4. Dividends are paid out. Each worker gets an iMessage receipt they can share, and the employer appears in the public Compact registry.",
+      "5. Workers share their receipts and bring Quorum to their next job. Signed employers use the badge in recruiting, so unsigned employers come under pressure.",
+      "6. More teams reach quorum and more Compacts are signed. Registry data, with Firecrawl checking for broken promises, makes the badge worth more."
+    ],
+    "following_strategy": "The worker is the distribution channel: one coworker invite per text, and the quorum counter ('3 of 5 voices') gives workers a built-in reason to recruit teammates. Each paid dividend is a shareable receipt. A public Compact registry and a monthly anonymized 'Shadow AI Report' (built only from data past quorum) give press and social reach. Positioning: a worker-side movement, not an HR tool.",
+    "why_now": "In late 2026, companies are issuing AI mandates faster than they can see real work, and quiet employee AI use is a known blind spot for them. Fear of layoffs makes workers hide their best ideas. Mid-sized firms cannot afford big consulting redesigns, and they need employee trust to keep a redesigned workflow in use after 90 days, which is the brief's core bet.",
+    "differentiation": "Reejig, Rorie and similar tools sell top-down to the employer, which then owns the data. Quorum reverses the order: workers hold the data and the employer has to negotiate for it. This is hard to copy because an employer-first company cannot credibly promise to keep data sealed from its own customer. The moat comes from the worker network across companies, the public Compact registry, and the incentive alignment of fee-on-dividend. It raises 'stands out', 'open space' and 'hard to copy' together.",
+    "sponsor_uses": [
+      "Photon (iMessage): all worker interaction. Logging tasks by text, coaching replies, the 'Keep or automate?' vote, and the dividend receipt sent to every worker's phone when the Compact is signed.",
+      "Convex: reactive, server-enforced sealing. The teamMap query returns {sealed, count} until count >= 5 AND compactSigned. When either changes, the dashboard and counters update live with no refresh, which the demo depends on.",
+      "Clerk: workers are personal users and the employer is a Clerk Organization with an admin role. Logs are keyed to the user ID and never to the org ID, so revoking org membership never exposes or deletes a worker's data. A matching org email domain is checked to block fake teammates.",
+      "Firecrawl: keeps the registry honest. It periodically crawls signers' press pages, careers pages and public state WARN notice listings. A layoff notice from a signer flags or revokes the badge in the public registry.",
+      "Nebula: not used. Its identity is unclear and nothing in this design depends on it."
+    ],
+    "mvp_3h": [
+      "0:00-0:30 Scaffold Next.js + Convex + Clerk (template). Schema: users, logs {userId, task, tool, minutesSaved, keep:boolean}, teams {orgId, quorum:5}, compacts {teamId, signedAt, dividendPct}.",
+      "0:30-1:15 Photon iMessage webhook to a Convex HTTP action. An LLM call parses the text into a log row, then replies with a one-line coaching tip and 'Saved privately. Only you can see this.'",
+      "1:15-1:45 Convex queries: myLogs (worker only). teamMap returns aggregates only when contributor count >= 5 and the Compact is signed; otherwise {sealed:true, count}. Hide any category with fewer than 3 contributors.",
+      "1:45-2:30 COO dashboard: a blurred 'Sealed: 4/5 voices' card, a Compact page (Pareto floor, amnesty, dividend %) with a Sign button, and the unsealed map showing hours/week, the Keep List and dividend per worker.",
+      "2:30-2:50 On sign: a Convex mutation schedules a Photon iMessage receipt to each contributor ('Your company signed. Projected dividend: $X/quarter').",
+      "2:50-3:00 Seed 4 fake workers. A static registry page with one Firecrawl-scraped WARN entry as a stretch goal; leave it hard-coded if time runs out."
+    ],
+    "demo_moment": "The dashboard on the projector reads 'SEALED: 4 of 5 voices'. A judge texts the Quorum number from their own phone: 'I use AI to draft vendor emails, saves ~3 hrs/week. Keep client calls human.' The counter flips live to 5/5, but the map stays locked behind 'Sign the Compact'. The presenter, acting as COO, signs it. The map unseals live (41 hrs/week, Keep List: client calls), and the judge's phone buzzes with an iMessage: 'Your company signed. Your projected dividend: $X/quarter.' The point lands in the room: the workers held the key.",
+    "abuse_risks_and_safeguards": [
+      "Employer pressures individuals to reveal what they logged: no API path returns per-person data, even to admins, and coercion breaches the Compact and costs the employer its registry badge.",
+      "Re-identification in small teams: minimum 5 contributors, categories with fewer than 3 contributors suppressed, and free-text quotes withheld from leaders unless the worker opts in.",
+      "Fake or employer-planted 'workers' to force a quorum: phone verified through iMessage plus a Clerk-verified company email domain, one voice per person.",
+      "Employer signs, then lays people off: Firecrawl monitors public WARN listings and press, a breach revokes the badge publicly, and the Compact includes a funded-transition obligation.",
+      "Workers inflate self-reported savings to grow the dividend: the dividend is computed from measured team cycle time and output, not self-reports. Self-reports only build the map.",
+      "Platform conflict of interest: the fee is charged on top of the dividend, never deducted from it, and published in the Compact."
+    ],
+    "angle": "worker-first"
+  },
+  {
+    "name": "Workprint",
+    "one_liner": "A free iMessage agent that keeps a portable work record you own and checks it against live job postings. It tells you which of your skills the market still pays for, and warns you before you retrain into a job that is being automated too.",
+    "problem": "Mental laborers are shifting from effective labor power (ELP: skills the market values) to ineffective labor power (ILP: skills it no longer needs). They find out too late, with no record of what they actually do beyond a stale r\u00e9sum\u00e9. When employers redesign work, the standard fix is generic outplacement or retraining, often into roles that are themselves being automated (a worry raised in the user's class). That means lost income, lower well-being and lasting resentment: all three hardships.",
+    "payer": "Employers that are redesigning or automating roles buy 'Transition Seats' for affected workers. This replaces part of their outplacement budget and is how they meet a no-worker-worse-off commitment. Second source: hiring companies pay a placement fee for consented introductions, and the worker gets a share.",
+    "primary_user": "An individual knowledge worker whose daily tasks are being automated, such as AP clerks, coordinators, analysts and support leads. They join free and privately over iMessage with no employer involved.",
+    "ethical_core": [
+      "The worker owns the record: it lives under the worker's personal Clerk account, can be exported, and stays after they leave a job. An employer that buys Transition Seats funds the record but has zero read access.",
+      "Retraining Reality Check: before recommending any retraining path, the agent crawls live postings for that target role and scores how exposed it is to automation. It will not recommend a path that is itself being automated. This makes the class worry about retraining into automated roles a hard rule in the product.",
+      "Compensation in line with Harold's minimal requirement: the employer that gains from automation pays to move affected workers from ILP back to ELP. Seat success is measured by income restored at 6 months, not by course completions.",
+      "Consent before any reveal: hiring companies see only what the worker approves, request by request, and the worker receives 25% of each placement fee. The worker's data earns money for the worker.",
+      "Human-connection skills (negotiation, care, client trust) are tracked and highlighted as durable ELP. That directs people toward work that keeps them employed, not just work that reads well on a r\u00e9sum\u00e9.",
+      "Each of the three hardships has a direct fix: income (faster, better-matched re-employment plus a revenue share), well-being (a weekly coach with an honest, cited signal), resentment (a record of one's own contributions that no employer can erase)."
+    ],
+    "business_model": "Free for workers indefinitely. Employers buy Transition Seats (for example $1,500 per affected worker, well below typical outplacement pricing), and part of the seat price is refunded if income is not restored within 6 months, so Workprint is paid for outcomes. Hiring companies pay a placement fee for consented introductions (for example 8% of first-year salary versus the usual 20-25% agency fee), with 25% of it going to the worker. Later: an anonymized ELP/ILP labor-market index licensed to workforce boards and universities, built only from data past an aggregation threshold.",
+    "business_cycle": [
+      "1. A worker texts Workprint free. A 2-minute weekly check-in ('what did you work on?') builds an evidence-backed task and skill record they own.",
+      "2. Each week Firecrawl scans live postings and sends a 'Labor Power Weather' text: which of your skills are rising (ELP) and which are drifting toward ILP, with links. It is useful enough that people share screenshots.",
+      "3. Shared weather reports and a public anonymized trend index bring in more workers and give Workprint a following, before any revenue.",
+      "4. Employers starting AI redesigns buy Transition Seats. It is cheaper and more credible than outplacement, and the 'no worker worse off' promise lets the redesign go ahead with employee buy-in.",
+      "5. Workers who choose to become discoverable get matched to hiring companies, which pay a reduced fee. The worker receives 25%, and income restored is measured.",
+      "6. Published outcome data (income restored, retraining paths avoided) brings in more seat buyers and workers, and longer records make matches better and harder to copy."
+    ],
+    "following_strategy": "Lead with the free weekly 'Labor Power Weather' text, which workers screenshot and share. Publish a monthly public ELP/ILP index by role ('Which jobs are actually safe to retrain into?') for press and social reach. The Retraining Reality Check is the hook in content: 'Before you take that bootcamp, text us the job title.' Invite-a-coworker comes naturally when a company announces a reorganization.",
+    "why_now": "In late 2026, job postings change faster than career advice and retraining programs. AI-driven restructuring is pushing outplacement budgets and worker anxiety up together. Workers no longer trust employer-run 'reskilling' that may lead into the next automated role. Live web crawling now makes a cited, near-real-time skill signal cheap to produce.",
+    "differentiation": "Reejig is employer-owned talent intelligence, and LinkedIn is a self-promotional profile. Workprint is a private, continuous, evidence-backed record that the worker owns, checked against live postings with citations, and paid for by the employer doing the automating. It is hard to copy because the moat is long-running records held by the worker, plus outcome-based pricing that incumbents optimizing for completions or recruiter margin will not take on. Unlike Quorum, it does not depend on a team reaching quorum: one worker is enough to get value.",
+    "sponsor_uses": [
+      "Photon (iMessage): the whole worker experience. Weekly check-ins, the 'Add this to your record? Y/N' confirmation, the Labor Power Weather text, the Retraining Reality Check reply, and per-request consent ('Acme wants to see your record. Approve?').",
+      "Firecrawl: the live market signal. It searches and scrapes about 10 current postings for a role or skill, which an LLM tags for required skills and for automation or AI-tool language. That produces an ELP score per skill with source links. Without it there is no Reality Check.",
+      "Convex: reactive storage of the worker record, scheduled weekly crawls (cron), and live updates to the dashboard while a crawl runs. Consent grants are rows with expiry that queries enforce.",
+      "Clerk: the worker signs in with a personal account and the employer is an Org. Seats are linked by a redeem code the worker enters, so the employer never learns which person enrolled. Removing org membership does not touch the record, which the demo shows.",
+      "Nebula: not used. Its identity is unclear and nothing in this design depends on it."
+    ],
+    "mvp_3h": [
+      "0:00-0:30 Scaffold Next.js + Convex + Clerk. Schema: users, entries {userId, task, skills[], confirmed}, scans {query, postings[{url, skillsMentioned, automationLanguage}]}, grants {userId, viewer, expiresAt}, seats {orgId, code, redeemed}.",
+      "0:30-1:10 Photon webhook to a Convex HTTP action. An LLM extracts tasks and skills from the text, the agent asks 'Add to your record? Y/N', and on Y saves a confirmed entry.",
+      "1:10-2:00 Reality Check action: when a message names a role, call Firecrawl search plus scrape for about 10 postings, tag each with the LLM, compute the share with automation language and the overlap with the user's skills, and reply over iMessage with counts and 2 links.",
+      "2:00-2:40 Next.js worker page: skill cards colored ELP or ILP with a sample size ('10 postings, today'), source links, and a 'Share for 7 days' consent button that creates a scoped link.",
+      "2:40-3:00 Employer page: buy seats (a mock button), see only counts and aggregate outcomes (minimum 5), never records. Pre-cache one Firecrawl result as a fallback in case conference Wi-Fi fails."
+    ],
+    "demo_moment": "Live on stage, the presenter texts: 'HR is offering to retrain me as a data-entry specialist. Should I take it?' The dashboard shows postings coming in from the live crawl. About 20 seconds later the phone buzzes: 'Careful: 6 of the 10 data-entry postings I just read mention automation tools. Your vendor-dispute skill appears in 4 account-manager postings with no automation language. Links attached. Add it to your record?' Then the presenter removes the worker from the employer's Clerk org on screen. The employer view goes blank, and the worker's record is still on the phone. The message: employers pay for the transition, and the worker owns it.",
+    "abuse_risks_and_safeguards": [
+      "False confidence in a small sample: every claim shows its sample size, date and source links ('10 postings, today, not a forecast'), and the agent never states certainty.",
+      "Employers using seats to find who is worried or job-hunting: seats are redeemed by an anonymous code, employers see only aggregates with a minimum of 5, and they have no access to records or job-search activity.",
+      "Recruiter spam or data harvesting: each reveal needs a per-request iMessage approval, grants expire, viewers are logged and visible to the worker, and the worker is paid per approved reveal.",
+      "LLM-invented skills inflating a record: nothing enters the record without the worker's Y/N confirmation, and entries keep their original text as evidence.",
+      "Scraping ethics and terms of service: only public postings are crawled through Firecrawl, results are cached and rate-limited, the source is always cited, and no personal data is collected from postings.",
+      "Sensitive career data leaking: minimal fields are stored, the user can text 'forget me' for full deletion, and data is never sold. The index is built only from data past an aggregation threshold."
+    ],
+    "angle": "worker-first"
+  },
+  {
+    "name": "Charter: the AI work agreement that enforces itself",
+    "one_liner": "Before any agent touches a department's work, employees and leadership negotiate a machine-readable Work Charter. Every agent action is checked against it at runtime, and 20% of our pilot fee stays in escrow until employee trust at day 90 meets or beats baseline.",
+    "problem": "COOs have an AI mandate. Their pilots stall at the works council, the union, legal or quiet employee resistance, because nobody can prove what the agents will and will not do with workers' data and jobs. Policies live in PDFs that agents never read, and vendors get paid whether trust survives or not.",
+    "payer": "The COO or CHRO of a 200-2,000 person knowledge-work company (insurance ops, accounting, legal ops, agencies, B2B SaaS support) buys a $25k 4-week department pilot, with $5k held in escrow. After the pilot, a per-department platform fee keeps the Charter enforced and audited.",
+    "primary_user": "Employees in the piloted department and their elected reps (works council, union steward or a peer-elected 'charter rep' in non-union firms) who ratify clauses. The COO also uses it, and so does the named accountable manager who owns each agent capability.",
+    "ethical_core": [
+      "Consent mechanics: an agent capability such as 'draft claim summaries' or 'route invoices' is a Charter clause. It stays locked until employee reps ratify it by majority vote. This is a gradation, not Harold's binary allow/ban: clauses can be scoped, time-boxed or revoked.",
+      "Data architecture: every agent tool call goes through one Convex mutation that checks the ratified clauses. A call with no clause is blocked and logged. Individual worker data cannot reach a manager unless a clause allows it, so surveillance is blocked by design, not by promise.",
+      "Named human accountability: each clause names one accountable human (a Clerk user). Out-of-scope requests go to that person over iMessage, and the audit log shows who approved what.",
+      "Money flow: 20% of the fee stays in escrow and is released only if the anonymous day-90 trust pulse is at or above the pre-pilot baseline. If the department files a WARN notice or lays off covered roles within 12 months, the certification is revoked and the escrow is refunded. We profit only when workers are not made worse off, which is Harold's minimal requirement written into the contract.",
+      "The three hardships become standing clauses: income (no pay cut from automation of a ratified task), well-being (a cap on review queues) and resentment (any worker can trigger a clause review)."
+    ],
+    "business_model": "Pilot fee of $25k per department, with $5k escrowed against the day-90 trust KPI. After the pilot, $1.5-3k per month per department for runtime enforcement, the audit trail and regulatory charter updates. Expansion revenue comes from new departments, each of which ratifies its own Charter. A later revenue line: a public 'Charter Certified' badge for employer branding and hiring, which can be revoked.",
+    "business_cycle": [
+      "1. The COO buys a pilot. The Charter template (pre-mapped to EU AI Act high-risk employment obligations and US state rules) gets legal and the works council to yes in days instead of quarters.",
+      "2. Workers ratify clauses. Agents run only inside what was ratified, so adoption sticks and trust is measured, not assumed.",
+      "3. The trust KPI clears baseline at day 90, the escrow releases and the department converts to the platform fee. The evidence pack sells the next department internally.",
+      "4. Anonymized clause outcomes ('this clause kept trust high', 'this one got revoked') feed a public Charter Library. Our template gets better with every pilot, which is a data moat Reejig and Rorie do not have.",
+      "5. Certified companies show the badge in job posts. Workers and reps start asking other employers 'do you have a Charter?', which pulls in the next buyers.",
+      "6. Firecrawl watches regulation and WARN filings. New rules become clause updates (renewal value), and a WARN notice revokes certification, which keeps the badge credible."
+    ],
+    "following_strategy": "Publish the open Charter Library (clause templates plus anonymized outcomes) as a free public good for worker reps and HR. Run 'Charter Teardown' posts that grade public AI-at-work announcements against the template. Recruit worker reps and stewards as a community, since they are the ones who demand the Charter. The certified-employer badge with public revocation turns each customer into a distribution channel.",
+    "why_now": "EU AI Act obligations for high-risk AI in employment and worker management are phasing in, and US states are adding rules on automated employment decisions (verify the exact dates before pitching). Agents now take actions instead of only drafting, so 'what may the agent do' has to be enforced at runtime. COOs face 2026 AI mandates while employees fear the tools, and some 'AI layoffs' are suspected recession cover, so a revocable, audited commitment works as a selling point.",
+    "differentiation": "Reejig maps skills and Rorie facilitates redesign. Neither turns worker consent into executable policy that gates the agent, and neither puts its own fee at risk on employee trust. The moat is the clause outcome library plus the trust escrow. A competitor can copy the UI but has to accept outcome risk to copy the business model.",
+    "sponsor_uses": [
+      "Convex: the Charter is a set of reactive tables, and a single checkAction mutation is the runtime gate for every agent tool call. Dashboards update live when a clause is ratified or revoked.",
+      "Clerk: organizations for the company. Roles are worker, rep, accountable manager and COO. Only reps can ratify, and every clause has a named accountable Clerk user.",
+      "Photon (iMessage): reps vote on clauses by text (YES / NO / AMEND). Blocked agent actions ping the accountable human by iMessage to approve or deny. Workers send 'review clause 4' to trigger a review.",
+      "Firecrawl: crawls public WARN notice pages and regulator pages. A WARN filing matching the customer flips the certification to revoked and the escrow to refund, and regulatory changes show up as suggested clause updates."
+    ],
+    "mvp_3h": [
+      "0:00-0:30: Next.js + Convex + Clerk scaffold. Tables: clauses (text, status, accountableUserId, votes), actions_log, trust_pulse, certification.",
+      "0:30-1:15: checkAction(capability, payload) mutation: allow if a ratified clause covers the capability, otherwise block, log and notify the accountable human. A fake 'claims agent' button panel fires three tool calls, one of them out of scope (export individual worker productivity to manager).",
+      "1:15-1:50: Photon iMessage. An inbound webhook parses YES/NO from reps' numbers into votes, and the clause flips to ratified at majority. Outbound pings go to the accountable human on blocked actions.",
+      "1:50-2:20: Firecrawl job scrapes one state WARN page for the demo company name and sets certification=revoked plus escrow=refund if found. Seed a fake company that matches a real-format row, or use a mocked page as fallback.",
+      "2:20-2:50: COO dashboard showing clauses, live vote count, blocked-action log, trust pulse vs baseline and the escrow meter (released / held / refunded).",
+      "2:50-3:00: Seed data and a rehearsal script. Skipped: real agent LLM calls (the agent is a button panel that emits tool calls) and real payments (the escrow is a ledger state)."
+    ],
+    "demo_moment": "Three judges get handed the 'worker rep' phones. The agent tries to run 'draft claim summaries' and is blocked on screen because the clause is not ratified. Judges text YES over iMessage, the vote counter ticks 1-2-3 live and the agent unlocks. Then the agent tries to send one worker's keystroke stats to her manager. It is blocked instantly, the accountable manager's phone buzzes with 'Agent requested data outside Charter, approve?', and the audience watches the line 'no clause, no action' hold.",
+    "abuse_risks_and_safeguards": [
+      "Management stacks the rep pool: reps are elected or peer-nominated, and the rep roster is visible to all workers. A Clerk org rule stops a manager-role user from being a rep.",
+      "Trust pulse gaming (pressuring staff to score high): the pulse is anonymous, aggregated with k\u22655, and collected by us, not the employer. Manager-visible results only show department-level numbers.",
+      "Charter-washing (ratify then quietly bypass by calling tools directly): only agents routed through checkAction get certified, and an out-of-band audit samples tool logs. Bypass found means certification is revoked publicly.",
+      "Badge used as recession cover for layoffs elsewhere: the WARN crawl covers the whole company, not just the pilot department, and revocation is public.",
+      "False WARN match (name collision): Firecrawl hits create a 'pending review' state that a human confirms before revocation. The company is notified and can contest."
+    ],
+    "angle": "buyer-first"
+  },
+  {
+    "name": "Waterfall: the automation dividend that pays workers first",
+    "one_liner": "A savings-share redesign service where every verified hour an agent saves goes through a public waterfall. The affected worker's dividend and redeployment are funded first, our fee second, the company's margin third. Nothing ships unless a Pareto check shows no affected worker ends up worse off.",
+    "problem": "Redesign tools promise efficiency, but the gains flow upward while the people whose tasks get automated absorb all three hardships Harold names: lost income, worse well-being and a sense of unfairness. So workers hide their best AI tricks (shadow AI), sandbag pilots, and the redesign is gone by day 90. COOs cannot get honest task data from people who expect to be automated out.",
+    "payer": "The COO or CFO pays nothing upfront beyond a $10k setup. We take 15% of verified net savings for 12 months, but only after the worker dividend tranche (25% of savings) is paid. The company keeps the remaining 60% plus durable workflow gains.",
+    "primary_user": "Individual knowledge workers (AP clerks, claims processors, paralegals, support leads) who text a private agent about their real work, propose automations of their own tasks, and cosign or veto any automation touching their role.",
+    "ethical_core": [
+      "Money flow: a strict waterfall in the ledger. Worker dividend and redeployment are funded first, then our fee, then company margin. If the worker tranche is not paid, our fee is not invoiced, so we are paid to protect workers.",
+      "Harold's minimal requirement becomes a ship gate: a Pareto check scores each affected worker on the three hardships (income delta, workload/well-being delta, a fairness signal from their own cosign). Any worker projected worse off blocks the ship until a remedy is attached (pay protection, redeployment to a task they put on their Keep List, or a retraining slot whose target task is checked against the automation backlog so we do not retrain people into the next thing to be automated).",
+      "Consent mechanics: two-key. The affected worker cosigns over iMessage and the manager approves. A worker who proposes automating their own task (amnesty for shadow AI) gets credited as the originator and earns a higher dividend share. Snitching on peers earns nothing.",
+      "Data architecture: worker iMessage conversations are private by default. Only the worker can promote a task card to the shared map. Managers see aggregated task maps, never transcripts."
+    ],
+    "business_model": "Outcome-based savings share: $10k setup per department plus 15% of verified net savings for 12 months, paid only after worker dividends clear. Verified savings come from before/after cycle time on the redesigned workflow. Upsell: a 'Dividend Ledger' SaaS ($8/worker/month) for companies that want to run the waterfall themselves across departments. Revenue only grows when workers keep using the workflow, which matches the brief's 90-day stickiness goal.",
+    "business_cycle": [
+      "1. Workers text the agent privately. Because they are paid first and credited for their own AI tricks, they surface the real automatable tasks (shadow AI comes into the open).",
+      "2. Worker-originated automations pass the two-key and the Pareto gate and ship with a funded remedy. Nobody is made worse off, so resistance drops.",
+      "3. Verified savings flow through the waterfall: workers get dividends, we invoice, the COO sees net margin. Each payout is an iMessage moment workers screenshot and share.",
+      "4. Paid workers propose more tasks and colleagues in other departments ask for it, so the department-to-company expansion comes bottom-up.",
+      "5. Anonymized Pareto outcomes (which remedies kept people whole) improve the gate and give COOs board-ready evidence, which sells the next company.",
+      "6. Workers carry a portable 'Originator record' of the automations they designed to their next job and pull Waterfall into new employers."
+    ],
+    "following_strategy": "Build the following with workers, not buyers. Publish a public Dividend Index (anonymized: total paid to workers, share of savings to labor). Run a 'Bring your shadow AI into the light' campaign. Every payout iMessage includes a shareable card ('I designed an automation and got $312'). The originator record becomes a career credential that workers promote themselves.",
+    "why_now": "Workers already use AI tools their employers do not know about, and companies cannot capture or govern that value while it stays hidden. Agents can now take over whole task chains, so displacement of mental labor (ELP to ILP) is visible in 2026. COOs need efficiency they can defend to boards, staff and regulators, and an outcome-priced, worker-first model removes both the budget objection and the trust objection.",
+    "differentiation": "Reejig and Rorie sell diagnosis and facilitation at a fixed fee. Waterfall is priced on outcomes and structurally subordinates its own fee to worker compensation, so a competitor copying it has to accept the same money flow. The Pareto gate plus originator credit turns the people at risk of displacement into the source of the task data, a data advantage a top-down tool cannot get.",
+    "sponsor_uses": [
+      "Photon (iMessage): the worker's private agent lives in iMessage. Workers describe tasks, mark Keep List items, cosign or veto automations ('Reply SIGN or BLOCK') and receive dividend notices. No app install, which matters for frontline knowledge workers.",
+      "Convex: reactive ledger and waterfall computation. The Pareto gate is a query over affected workers that recomputes live when a remedy is attached or a cosign arrives.",
+      "Clerk: org plus roles (worker, manager, COO, finance). Gates who can see transcripts (only the worker) versus aggregated maps (managers).",
+      "Firecrawl: optional and only where it carries weight. It crawls public job postings and skills-demand pages to check that a proposed retraining target is not itself heavily automatable, the guard against 'retraining into the next ILP'. Skip it if time runs short."
+    ],
+    "mvp_3h": [
+      "0:00-0:30: Next.js + Convex + Clerk scaffold. Tables: workers, tasks (originatorId, keepList flag, private/shared), automations (affectedWorkerIds, hoursSaved, cosigns, managerApproved, remedy), ledger.",
+      "0:30-1:15: Photon webhook. A worker texts a task description, a card is created as private, and texting SHARE promotes it. On a proposal, affected workers get 'Reply SIGN or BLOCK'.",
+      "1:15-1:50: Pareto gate function. For each affected worker, compute income delta, workload delta and cosign status. Ship is enabled only if every worker is >= 0 or has a remedy attached. Add an assert-based self-check with three seeded cases.",
+      "1:50-2:30: Waterfall ledger. Savings = hoursSaved \u00d7 loaded rate, then worker tranche, then vendor fee (only if the worker tranche is marked paid), then company margin. Payout triggers an iMessage to the worker.",
+      "2:30-2:55: COO view (live gate status, waterfall bars) and worker view (my tasks, my dividends, Keep List).",
+      "2:55-3:00: Seed one department with three workers. Skipped: real cycle-time measurement (hoursSaved entered manually), real payments and the Firecrawl retraining check unless time remains."
+    ],
+    "demo_moment": "The COO clicks 'Ship invoice-matching automation' and it goes red: 'Blocked: Maria worse off (-6 hrs/week of paid work, no remedy).' The COO attaches 'redeploy to vendor-dispute resolution', a task Maria put on her Keep List. Maria's phone (a judge holding it) gets an iMessage, the judge replies SIGN, and the gate turns green live. The waterfall animates: Maria's $312 dividend lands first with an iMessage ping, then the vendor fee, then company margin. Close with the line 'We do not get paid until she does.'",
+    "abuse_risks_and_safeguards": [
+      "Inflated savings to boost our fee: savings are verified against before/after workflow timestamps, a capped baseline, and finance-role signoff. Our fee is also capped as a share of the worker tranche paid.",
+      "Managers coerce cosigns: cosigns come from the worker's own iMessage, can be revoked for 14 days, and an anonymous 'I was pressured' reply freezes the automation and alerts the elected rep or HR outside the reporting line.",
+      "Dividend as a hush payment before layoffs: the pay-protection remedy is contractual for 12 months, and a layoff of a dividend recipient in a covered role triggers a fee clawback.",
+      "Privacy leakage from private task chats: transcripts are never queryable by manager roles (enforced in Convex auth checks via Clerk roles). Only worker-promoted cards are shared, and aggregates require k\u22655.",
+      "Shadow-AI amnesty used to entrap: amnesty is written into the pilot contract, disclosures are originator-credited only, and no disciplinary data path exists in the schema."
+    ],
+    "angle": "buyer-first"
+  },
+  {
+    "name": "Residuals",
+    "one_liner": "Hollywood-style residuals for workplace know-how: each time a company agent runs on a skill an employee taught it, that employee earns a metered royalty. The license has a layoff clause, so automating someone out of a job triggers a buyout instead of a free ride.",
+    "problem": "Teams under an AI mandate are told to 'document your workflows' so agents can do them, which feels like being asked to train your replacement for free. Workers hold back their tacit know-how, keep exception handling in their heads, or use AI in secret. The agents end up worse, adoption stalls, and the COO gets neither the gains nor the trust. Harold's ILP problem is the core: the knowledge that makes a worker's labor effective is taken from them and turned into capital that belongs to someone else.",
+    "payer": "The company (the COO or operations budget) pays a platform fee per department plus the royalty pool. Residuals takes a 10% fee on royalties that flow through it. Workers never pay.",
+    "primary_user": "Frontline knowledge workers in mid-sized companies (ops, support, finance back-office, claims) who hold the exception-handling know-how. Secondary user: the COO or department head who needs agents that actually work.",
+    "ethical_core": [
+      "The money flow itself is the ethic. Every agent run that uses a worker-taught skill writes a royalty line to a Convex ledger owned by that worker, so value created from their know-how keeps paying them (this answers the income-loss hardship).",
+      "A layoff clause with teeth. If the contributor is involuntarily separated within the license term, each dependent skill either pays a pre-agreed buyout to the worker (for example 12 months of that skill's royalties, with a floor) or the agent pauses. Automating a person away has a visible, priced cost. This puts Harold's minimal requirement into the contract: the worker cannot end up worse off than without the agent.",
+      "Consent by construction. Know-how texted to the agent is private by default. A skill card is licensed only when the worker taps Approve on the card and the rate, and they can see every run that pays them (this answers the resentment hardship: they can see the deal is fair).",
+      "Residuals are portable. Royalties follow the person after an internal transfer or a voluntary exit, so sharing know-how is never a career risk.",
+      "This is a graded design, not a ban (the class critique of allow/ban). Automation is allowed, and its price rises with how much it displaces."
+    ],
+    "business_model": "Pilot: a 4-week department engagement (about $15k) that collects skills over iMessage and turns on 3 to 5 licensed agent skills. Then a per-department SaaS fee (about $1.5k/month), plus a 10% take on the royalty pool (rates are set per run, with a floor). Later: a cross-company 'skill exchange' where workers can license generic, non-confidential know-how (for example a carrier-claim dispute playbook) to other companies, with consent and a revenue split. The company comes out ahead because a royalty of cents per run is far below the labor cost saved, and agents built on real exception know-how have fewer failures than ones built from SOP documents.",
+    "business_cycle": [
+      "1. The COO buys a pilot to meet the AI mandate. Workers join because it pays them and puts the layoff clause in writing.",
+      "2. Workers text their real exceptions and tricks to the agent over iMessage, and the agent drafts skill cards that the workers approve.",
+      "3. Agents built on approved skills handle more of the edge cases, so cycle time and exception rates improve, and every run pays the person who taught it.",
+      "4. Visible paychecks bring in more contributors and better skills, which improves the agents. Royalty income also becomes a story workers post publicly, which recruits other teams and companies.",
+      "5. Results and the 'Residuals employer' badge help the company hire, which leads to expansion to more departments and access to the skill exchange.",
+      "6. The exchange and the royalty data set fair-rate benchmarks for know-how, which makes Residuals the standard contract and gives it network-effect defensibility."
+    ],
+    "following_strategy": "Build a following on the worker side first: a public 'residuals leaderboard' (opt-in, first names or anonymous) showing top skills and lifetime earnings, plus a story series titled 'I taught the bot and it pays my rent.' A free one-page 'Know-How License' template that any worker can bring to their manager acts as an organizing artifact and a source of leads. The SAG-AFTRA framing (their 2023 contract won consent and compensation terms for AI digital replicas) gives the press an instant hook: 'residuals for office workers.'",
+    "why_now": "In late 2026, agents can execute real multi-step back-office work, so the question has moved from 'will AI help' to 'whose knowledge is it running on.' COOs have AI mandates but adoption stalls on hidden know-how and secret AI use. Entertainment unions already set the precedent of consent plus compensation for AI built from a person's work, and knowledge workers are asking 'why not us?' Regulators (for example the EU AI Act's high-risk category for employment uses) are raising the cost of AI that is opaque to workers.",
+    "differentiation": "Reejig and Rorie map skills and redesign work from the employer's side. Residuals is the only product where the worker's knowledge is a licensed, metered asset with a paycheck and a layoff buyout attached. It is a new contract primitive, not a dashboard. It is hard to copy because the moat is the royalty ledger, the rate benchmarks and worker trust: an incumbent selling to HR cannot credibly put a price on layoffs. Note that legally the employer often owns work product, so the residual is a contract the employer opts into, sold as the price of real cooperation and better agents.",
+    "sponsor_uses": [
+      "Photon (iMessage): workers text the agent their real exceptions ('when a carrier rejects a claim for missing BOL I...'). The agent replies with a draft skill card for Approve/Edit. Workers also get a live royalty ping each time their skill runs. This is load-bearing because the know-how is captured where workers already talk, privately, with no new app.",
+      "Convex: a reactive royalty ledger and skill registry. Every run writes a royalty row, and the dashboards and the worker's balance tick live. The layoff clause runs as a Convex mutation that recomputes buyouts and pauses dependent skills in real time.",
+      "Clerk: organizations with roles (worker, manager, steward). Each skill license is tied to the contributor's verified identity, so royalties and buyouts go to the right person. Workers see only their own ledger, and managers see aggregates.",
+      "Firecrawl (optional, secondary): crawls a public rate page and job-board pay data to suggest a fair floor royalty per skill category. It can be cut if time runs short."
+    ],
+    "mvp_3h": [
+      "0:00-0:30: Scaffold Next.js, Convex and Clerk with an org and 2 roles. Tables: skills (owner, text, rate, status), runs, ledger, licenses (term, buyoutFloor).",
+      "0:30-1:15: Photon iMessage webhook. An inbound text creates a draft skill. One LLM call turns it into a skill card, and the reply 'APPROVE' licenses the card at the default rate.",
+      "1:15-1:50: Manager page with a 'Run agent on ticket' button. It picks the matching licensed skill, shows the agent's answer, writes a run and a royalty row, and sends an iMessage ping to the worker ('Your Missing-BOL skill ran: +$0.40, lifetime $212').",
+      "1:50-2:30: Worker ledger page and an HR 'Separate employee' button. A Convex mutation computes the buyout for each dependent skill and flips those skills to PAUSED until 'Pay buyout' is clicked.",
+      "2:30-3:00: Seed data (2 workers, 5 skills, 300 past runs), polish, and a dry run of the demo on a real phone."
+    ],
+    "demo_moment": "Live on stage, I text the agent from my iPhone: 'when a carrier rejects for missing BOL, I call their dock directly and they reissue in 10 min.' I reply APPROVE, then the manager screen runs the agent on a real ticket and my phone buzzes on the mic: 'Your skill just ran: +$0.40.' Then I play HR and click 'Lay off Maria.' Three agents on the COO dashboard turn red at once: 'License clause triggered: $18,400 buyout owed to Maria, or these agents stop.' Line: 'In our model, you can't automate someone out of a job for free.'",
+    "abuse_risks_and_safeguards": [
+      "Workers farm royalties with trivial or duplicate skills: royalties pay only on runs that pass QA or human acceptance, near-duplicates are merged with shared credit, and a steward reviews new skills.",
+      "The employer lowballs rates or pressures workers to sign: a rate floor is set by benchmark, licensing is optional and declining carries no penalty (logged by a steward), and terms are shown in plain language before Approve.",
+      "The employer avoids the layoff clause by relabeling layoffs as 'performance' or by restructuring: the clause covers any involuntary separation within the term, disputes go to a neutral steward, and an optional Firecrawl check of public WARN notices flags mass layoffs.",
+      "Private texts leak confidential or personal data: raw messages stay in the worker's private space, only the approved skill card is shared, and the worker can delete raw messages at any time.",
+      "Royalties create perverse incentives (workers keep the agent bad so humans stay needed): royalties scale with successful runs, so a better agent pays the worker more."
+    ],
+    "angle": "model-first"
+  },
+  {
+    "name": "Pareto Bond",
+    "one_liner": "An automation vendor whose fee sits in escrow and pays out last: savings first restore any affected worker who is worse off, a monthly worker pulse over iMessage gates every payout, and a public registry crawls layoff notices and claws back the fee if the company breaks its pledge.",
+    "problem": "COOs need AI savings, but every redesign looks like a layoff in waiting, so employees resist and the 90-day adoption rate collapses. Vendors are paid upfront whether or not workers end up worse off, so no one in the deal is accountable for the three hardships: income loss, well-being decline and resentment. 'Responsible AI' pledges are slides with no money behind them.",
+    "payer": "The company pays an outcome-based fee, for example 20% of measured savings for 12 months. The fee is escrowed and released only after the worker-protection waterfall clears. Optional: insurers or lenders pay for registry data as a workforce-risk signal.",
+    "primary_user": "The COO of a mid-sized knowledge-work company (200-2,000 staff) under an AI mandate. The workers in the redesigned department are co-users who hold the gate.",
+    "ethical_core": [
+      "A waterfall puts Harold's minimal requirement into practice. Monthly savings from automation flow in a fixed order: (1) top up any affected worker below their baseline pay, retraining stipend or redeployment, (2) a gainshare dividend to the team, (3) the vendor's fee, (4) the company. The vendor earns only once no worker is worse off.",
+      "The three hardships are measured, not assumed. A 3-question monthly pulse over iMessage (pay security, workload or well-being, fairness) goes to every affected worker. If the anonymous fairness score drops below the threshold, the vendor fee stays locked.",
+      "The vendor's incentive points the right way. Our revenue depends on worker trust and retention 90 days or more out, which is exactly the bet in the brief.",
+      "Public accountability with teeth. Certified companies appear on a public 'Pareto Pledge' registry. Firecrawl regularly checks state WARN notices and the company's careers or newsroom pages, and a matching layoff in a certified department suspends the badge and claws escrowed fees back into the worker pool.",
+      "Gradations, not a ban: automation proceeds, and the waterfall sets its price."
+    ],
+    "business_model": "A free 2-week diagnostic, then a 4-week pilot at a low base fee (about $5k) plus a success fee of 20% of verified savings for 12 months, held in escrow behind the waterfall. Later: an annual registry certification fee (about $10k/year) for companies that want the public badge without a full engagement, and data or API access for insurers, lenders and job platforms that want a workforce-risk signal. Gross margin is high because agents do the interviewing and measurement, and fees scale with the client's results.",
+    "business_cycle": [
+      "1. A COO signs a pilot because the fee is outcome-based and the badge helps hiring, with little downside.",
+      "2. Workers engage because the waterfall pays them first and their monthly iMessage pulse can lock the vendor's fee. Their votes carry real money.",
+      "3. Trust drives honest task mapping and higher adoption, so savings arrive faster, the worker dividend grows, and the vendor fee is released.",
+      "4. The certified company appears on the public registry. Candidates and workers check it when deciding where to work (a Glassdoor-like pull), which raises demand for the badge.",
+      "5. Firecrawl monitoring keeps the registry credible (badges can actually be lost), so the badge carries signal and peers buy certification.",
+      "6. Registry data (pledges, pulse trends, clawbacks) becomes a benchmark that insurers and investors consult, deepening the moat and the following."
+    ],
+    "following_strategy": "Lead with the public registry as a consumer product for job seekers: 'Is this employer automating fairly?' with a searchable page per company and an alert when a badge is suspended. Each clawback is a newsworthy, shareable event that proves the system has teeth. Workers at certified companies receive a dividend notice they can share. Partner with labor-studies classes and worker advocates as independent stewards to borrow credibility.",
+    "why_now": "In 2026, nearly every mid-sized company has an AI mandate and workers widely suspect that 'AI efficiency' means cuts (some 'AI layoffs' may even be cover for a downturn, which only a public, verified registry can untangle). Agents can now measure task cycle time and exceptions cheaply, which makes outcome-based, escrowed pricing workable. Regulators are classifying AI in employment as high-risk, so a third-party, worker-verified certification has real value.",
+    "differentiation": "Reejig and Rorie sell workforce intelligence to the employer and get paid regardless of outcomes for workers. Pareto Bond is the only vendor whose own revenue sits behind workers in the payout order and can be clawed back by public layoff data. Copying it requires an incumbent to put its fees at risk, which a VC-funded HR-tech company will not easily do, and the registry's credibility (badges actually revoked) builds a moat over time.",
+    "sponsor_uses": [
+      "Photon (iMessage): the monthly 3-question pulse and the gate vote go to workers as iMessages, with replies 1-5 and an optional comment, anonymized before storage. Workers also receive 'Your dividend this month: $X' and a notice when the waterfall pays them. This is load-bearing because response rates on a familiar text thread make the gate legitimate.",
+      "Firecrawl: crawls a public state WARN notice page and the company's newsroom or careers pages for layoff signals tied to certified companies. A match automatically suspends the badge and triggers the clawback. This is load-bearing because it keeps the certification honest without trusting the client.",
+      "Convex: the waterfall engine and escrow ledger as reactive functions. When savings, pulse results or crawl events change, the waterfall recomputes and every dashboard (COO, worker, public registry) updates live.",
+      "Clerk: organizations and roles (COO, worker, steward, public). Pulse responses are verified as coming from real affected workers but stored without the link to identity, and the public registry needs no login."
+    ],
+    "mvp_3h": [
+      "0:00-0:30: Scaffold Next.js, Convex and Clerk. Tables: companies, workers (baseline pay), savingsEvents, pulses, escrow, registry, crawlEvents.",
+      "0:30-1:15: The waterfall as one Convex function: savings pool \u2192 worker top-ups \u2192 dividend \u2192 vendor fee (locked if the fairness score is below 3.5) \u2192 company. Plus a COO dashboard with an animated waterfall bar. Include a small assert-based test of the waterfall math.",
+      "1:15-1:50: Photon pulse. A 'Send pulse' button texts 3 questions, replies are parsed into scores, and the gate status updates live.",
+      "1:50-2:30: Firecrawl job. Crawl a WARN page (a real state page, or a fixture page if it is blocked), fuzzy-match a certified company name, suspend the badge, and move escrow back to the worker pool.",
+      "2:30-3:00: Public registry page (badge, pulse trend, status), seed data and a demo dry run."
+    ],
+    "demo_moment": "The COO dashboard shows $42k of monthly savings flowing down the waterfall, with the vendor's (our) $8.4k fee waiting at the bottom. Three volunteers in the audience get the pulse on their iPhones and reply '1' to 'Is this fair?' The fairness score drops and our fee turns red and LOCKED on screen. Then I click 'Crawl WARN notices.' Firecrawl pulls a live public page, finds the certified company's name, the public badge flips to SUSPENDED, and our escrowed fee animates back into the workers' pool. Line: 'Our own revenue just got clawed back on stage. That's the product.'",
+    "abuse_risks_and_safeguards": [
+      "Workers vote 'unfair' to extract payouts: the vote only locks the vendor fee (it never pays workers directly), a steward reviews persistent low scores, and comments must state a reason.",
+      "Companies game baselines or reclassify workers as outside the 'affected' scope: baselines are frozen at pilot start with worker sign-off, and anyone whose tasks were touched by an agent is automatically in scope.",
+      "False-positive WARN matches (same name, different company or a different department): the crawl only flags matches, a human steward confirms before a clawback, and the company gets a 72-hour response window shown publicly.",
+      "Retaliation against low-scoring teams: pulses are anonymized with a minimum group size of 5 before display, only aggregates are shown, and the raw link between phone and answer is not kept after verification.",
+      "The registry is used as a reputational weapon: the methodology is published, there is a public appeal log, and a badge is suspended only on verified evidence."
+    ],
+    "angle": "model-first"
+  }
+]
