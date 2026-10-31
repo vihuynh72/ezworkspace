@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { payout, sealed, teamMap } from "../convex/lib";
+import { sealed, teamMap, value, VALUE_SOURCES } from "../convex/lib";
 
 const log = (workerId: string, category: string, minutesPerWeek: number, extra = {}) => ({
   workerId, task: `${category} task`, category, minutesPerWeek, keepHuman: false, originator: false, ...extra,
@@ -21,12 +21,19 @@ test("categories with fewer than 3 people are hidden, and so are their keep-huma
   expect(m.keepList).not.toContain("secret task");
 });
 
-test("payout order: workers first, fee on top, company keeps the rest", () => {
-  const p = payout([log("a", "X", 600, { originator: true }), log("b", "X", 600)], 48, 30, "Acme");
-  const [workers, fee, company] = p.steps;
-  expect(p.steps.map((s) => s.kind)).toEqual(["workers", "fee", "company"]);
-  expect(workers.amount).toBe(Math.round(p.quarterlySavings * 0.3));
-  expect(fee.amount).toBe(Math.round(workers.amount * 0.1));
-  expect(workers.amount + fee.amount + company.amount).toBe(p.quarterlySavings);
-  expect(p.perWorker.get("a")!).toBeGreaterThan(p.perWorker.get("b")!);
+test("value: hours AI saves, its share of team time, and a quarter of it at the loaded rate", () => {
+  const v = value([log("a", "X", 600), log("b", "X", 300, { originator: true })], 5, 48);
+  expect(v.hoursPerWeek).toBe(15);
+  expect(v.teamHoursPerWeek).toBe(200);
+  expect(v.aiShare).toBe(0.075);
+  expect(v.quarterlyValue).toBe(15 * 48 * 13);
+  // Replacing an AP clerk costs 0.5-2x the $49,210 median salary.
+  expect([v.replaceCostLow, v.replaceCostHigh, v.bootcampCost]).toEqual([24605, 98420, 14000]);
+  expect(VALUE_SOURCES).toHaveLength(3);
+});
+
+test("value never divides by zero or passes 100% of team time", () => {
+  expect(value([], 0, 48)).toMatchObject({ hoursPerWeek: 0, aiShare: 0, quarterlyValue: 0 });
+  expect(value([log("a", "X", 6000)], 1, 48).aiShare).toBe(1);
+  expect(value([log("a", "X", 100)], 3, 48).aiShare).toBe(0.014); // 1.7 / 120, 3 decimals
 });

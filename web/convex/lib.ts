@@ -1,7 +1,5 @@
 // Pure rules behind the Compact. No database access, so tests/lib.test.ts can check them directly.
 
-export const DIVIDEND_PCT = 30;
-export const FEE_PCT = 10; // charged on top of the dividend, never taken out of it
 export const MIN_GROUP = 3; // categories with fewer people are hidden from the employer
 const WEEKS_PER_QUARTER = 13;
 
@@ -46,32 +44,25 @@ export function teamMap(logs: Log[]) {
   };
 }
 
-// Payout order is the ethics: workers first, then our fee, then the company.
-export function payout(logs: Log[], hourlyCost: number, dividendPct: number, company: string) {
-  const quarterlySavings = Math.round(
-    (logs.reduce((s, l) => s + l.minutesPerWeek, 0) / 60) * hourlyCost * WEEKS_PER_QUARTER,
-  );
-  const pool = Math.round((quarterlySavings * dividendPct) / 100);
-  const fee = Math.round((pool * FEE_PCT) / 100);
-  // Originators of a shortcut earn a 1.5x weight on the time it saves.
-  const weights = new Map<string, number>();
-  for (const l of logs) {
-    weights.set(l.workerId, (weights.get(l.workerId) ?? 0) + l.minutesPerWeek * (l.originator ? 1.5 : 1));
-  }
-  const totalWeight = [...weights.values()].reduce((s, w) => s + w, 0);
-  const perWorker = new Map(
-    [...weights].map(([id, w]) => [id, totalWeight ? Math.round((pool * w) / totalWeight) : 0]),
-  );
+// The value story: keep people and move them into AI-era work, instead of firing, re-hiring or retraining.
+export const VALUE_SOURCES = [
+  { label: "Cost to replace an employee: 0.5-2x salary (Gallup)", url: "https://www.gallup.com/workplace/247391/fixable-problem-costs-businesses-trillion.aspx" },
+  { label: "AP clerk median pay $49,210 (BLS)", url: "https://www.bls.gov/ooh/office-and-administrative-support/bookkeeping-accounting-and-auditing-clerks.htm" },
+  { label: "Bootcamp ~$14k, ~14 weeks (Course Report)", url: "https://www.coursereport.com/coding-bootcamp-ultimate-guide" },
+];
+const AP_SALARY = 49210;
+
+export function value(logs: { minutesPerWeek: number }[], voices: number, hourlyCost: number) {
+  const hoursPerWeek = round1(logs.reduce((s, l) => s + l.minutesPerWeek, 0) / 60);
+  const teamHoursPerWeek = voices * 40;
   return {
-    quarterlySavings,
-    dividendPct,
-    feePct: FEE_PCT,
-    perWorker,
-    steps: [
-      { order: 1, kind: "workers" as const, label: `Workers who surfaced the savings (${dividendPct}%)`, amount: pool },
-      { order: 2, kind: "fee" as const, label: `ezworkspace fee (${FEE_PCT}% on top of the dividend)`, amount: fee },
-      { order: 3, kind: "company" as const, label: `${company} keeps the rest`, amount: quarterlySavings - pool - fee },
-    ],
+    hoursPerWeek,
+    teamHoursPerWeek,
+    aiShare: teamHoursPerWeek ? Math.min(1, Math.round((hoursPerWeek / teamHoursPerWeek) * 1000) / 1000) : 0,
+    quarterlyValue: Math.round(hoursPerWeek * hourlyCost * WEEKS_PER_QUARTER),
+    replaceCostLow: AP_SALARY / 2,
+    replaceCostHigh: AP_SALARY * 2,
+    bootcampCost: 14000,
   };
 }
 

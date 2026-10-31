@@ -53,3 +53,21 @@ export function readiness(workers: Progress[]) {
     completed: count(finished),
   };
 }
+
+// A worker's own progress, for progress.mine and "how am I doing?". Only they ever see it.
+export function progressOf(w: Progress & { skills?: string[] }, logs: { minutesPerWeek: number }[]) {
+  const { track, step } = pathOf(w);
+  return {
+    hoursPerWeek: Math.round(logs.reduce((s, l) => s + l.minutesPerWeek, 0) / 6) / 10,
+    skills: (w.skills ?? []).slice(-5),
+    track: w.track === "newhire" ? ("new_hire" as const) : w.track ? ("transition" as const) : null,
+    step, // past steps means finished
+    steps: PATHS[track].length,
+  };
+}
+
+export function progressLine(p: ReturnType<typeof progressOf>) {
+  const skills = p.skills.length ? `Skills learned: ${p.skills.join(", ")}.` : "No skills practiced yet.";
+  const path = p.step > p.steps ? `You finished all ${p.steps} steps.` : `You're on step ${p.step} of ${p.steps}.`;
+  return `AI saves you about ${p.hoursPerWeek} hours a week. ${skills} ${path}`;
+}

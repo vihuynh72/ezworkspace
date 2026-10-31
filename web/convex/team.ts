@@ -1,7 +1,8 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { DIVIDEND_PCT, payout, sealed, teamMap } from "./lib";
-import { pathOf, readiness, suggest } from "./paths";
+import type { Id } from "./_generated/dataModel";
+import { mutation, query, type MutationCtx } from "./_generated/server";
+import { sealed, teamMap, value, VALUE_SOURCES } from "./lib";
+import { readiness, suggest } from "./paths";
 import { getTeam, requireCoo, teamCompact, teamLogs, teamWorkers } from "./util";
 
 // The only read the employer gets. Nothing per-person ever leaves this function.
@@ -16,7 +17,9 @@ export const overview = query({
     const compact = await teamCompact(ctx, team._id);
     const isSealed = sealed(voices, team.quorum, compact !== null);
     const logs = isSealed ? [] : await teamLogs(ctx, team._id);
-    const p = isSealed ? null : payout(logs, team.hourlyCost, compact!.dividendPct, team.company);
+    const playbooks = isSealed
+      ? null
+      : await ctx.db.query("playbooks").withIndex("by_team", (q) => q.eq("teamId", team._id)).order("desc").take(50);
     return {
       team: { name: team.name, company: team.company },
       voices,
@@ -24,7 +27,6 @@ export const overview = query({
       compact: compact && {
         signedBy: compact.signedBy,
         signedAt: compact.signedAt,
-        dividendPct: compact.dividendPct,
         floorMonths: compact.floorMonths,
       },
       sealed: isSealed,
@@ -33,12 +35,13 @@ export const overview = query({
       // Counts per guided path; 1-2 people show as null ("under 3"), never per person.
       readiness: isSealed ? null : readiness(workers),
       map: isSealed ? null : teamMap(logs),
-      payout: p && {
-        quarterlySavings: p.quarterlySavings,
-        dividendPct: p.dividendPct,
-        feePct: p.feePct,
-        steps: p.steps,
-      },
+      value: isSealed ? null : { ...value(logs, voices, team.hourlyCost), sources: VALUE_SOURCES },
+      // Who shared a workflow stays private: originatorId never leaves the server.
+      playbooks:
+        playbooks &&
+        playbooks.map(({ _id, title, category, steps, source, adopters, published }) => ({
+          _id, title, category, steps, source, adopters, published,
+        })),
     };
   },
 });
@@ -53,22 +56,13 @@ export const signCompact = mutation({
       teamId: team._id,
       signedBy: identity.name ?? identity.email ?? "COO",
       signedAt: Date.now(),
-      dividendPct: DIVIDEND_PCT,
       floorMonths: 12,
     });
-    // Receipts go to every real worker; seeded demo workers have no phone to buzz.
-    const workers = await teamWorkers(ctx, team._id);
-    const { perWorker } = payout(await teamLogs(ctx, team._id), team.hourlyCost, DIVIDEND_PCT, team.company);
-    for (const w of workers.filter((w) => !w.seeded)) {
-      await ctx.db.insert("outbox", {
-        to: w.phone,
-        sent: !w.phone.startsWith("+"), // web-fallback workers read it in the browser, so iMessage skips it
-        body:
-          `${team.company} just signed the ezworkspace Compact: no pay cuts or AI layoffs for 12 months. ` +
-          `Your share of what AI saves is about $${(perWorker.get(w._id) ?? 0).toLocaleString("en-US")} a quarter, ` +
-          `paid before ezworkspace earns a cent. ${suggest(pathOf(w).track, pathOf(w).step, false)}`,
-      });
-    }
+    await tellTeam(
+      ctx,
+      team._id,
+      `${team.company} signed the ezworkspace Compact. No pay cuts or AI layoffs for 12 months, and paid time to learn. Text PLAN for your plan.`,
+    );
     return null;
   },
 });
@@ -91,3 +85,25 @@ export const invite = mutation({
     return null;
   },
 });
+
+// A worker's shared shortcut becomes a team workflow; every teammate gets a text inviting them to learn it.
+export const publishPlaybook = mutation({
+  args: { playbookId: v.id("playbooks") },
+  handler: async (ctx, { playbookId }) => {
+    await requireCoo(ctx);
+    const pb = await ctx.db.get("playbooks", playbookId);
+    if (!pb) throw new ConvexError("That workflow is gone. Refresh the page.");
+    if (pb.published) return null;
+    await ctx.db.patch("playbooks", playbookId, { published: true });
+    await tellTeam(ctx, pb.teamId, `New team workflow: ${pb.title}. Want to learn it in 2 minutes? Reply TRY.`);
+    return null;
+  },
+});
+
+// Texts every real worker; seeded demo workers have no phone to buzz.
+async function tellTeam(ctx: MutationCtx, teamId: Id<"teams">, body: string) {
+  for (const w of (await teamWorkers(ctx, teamId)).filter((w) => !w.seeded)) {
+    // web-fallback workers read it in the browser, so iMessage skips it
+    await ctx.db.insert("outbox", { to: w.phone, sent: !w.phone.startsWith("+"), body });
+  }
+}

@@ -20,6 +20,8 @@ export default defineSchema({
     practiced: v.optional(v.number()), // TRY sessions finished
     track: v.optional(trackValidator), // guided path (convex/paths.ts); unset means transition
     step: v.optional(v.number()), // 1-based step on that path; past the last step means finished
+    memory: v.optional(v.string()), // the coach's private notes on this worker; only their own prompts read it
+    skills: v.optional(v.array(v.string())), // up to 5 practiced tasks and adopted team workflows
   })
     .index("by_phone", ["phone"])
     .index("by_team", ["teamId"]),
@@ -39,8 +41,19 @@ export default defineSchema({
     teamId: v.id("teams"),
     signedBy: v.string(),
     signedAt: v.number(),
-    dividendPct: v.number(),
+    dividendPct: v.optional(v.number()), // legacy, no longer written
     floorMonths: v.number(),
+  }).index("by_team", ["teamId"]),
+  // Team workflows: shared up by a worker (name kept private) or added by the admin.
+  playbooks: defineTable({
+    teamId: v.id("teams"),
+    title: v.string(),
+    category: v.string(),
+    steps: v.array(v.string()),
+    source: v.union(v.literal("worker"), v.literal("admin")),
+    originatorId: v.optional(v.id("workers")), // never returned to the employer
+    adopters: v.number(),
+    published: v.boolean(),
   }).index("by_team", ["teamId"]),
   outbox: defineTable({
     to: v.string(),

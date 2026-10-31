@@ -27,7 +27,7 @@ const SEED = [
 ];
 
 async function reseed(ctx: MutationCtx) {
-  for (const table of ["outbox", "compacts", "logs", "workers", "teams"] as const) {
+  for (const table of ["outbox", "compacts", "playbooks", "logs", "workers", "teams"] as const) {
     for await (const doc of ctx.db.query(table)) await ctx.db.delete(table, doc._id);
   }
   const teamId = await ctx.db.insert("teams", {
@@ -36,10 +36,42 @@ async function reseed(ctx: MutationCtx) {
     quorum: 5,
     hourlyCost: 48,
   });
+  const ids = [];
   for (const [i, logs] of SEED.entries()) {
     const workerId = await ctx.db.insert("workers", { teamId, phone: `+1555000000${i + 1}`, seeded: true });
     for (const log of logs) await ctx.db.insert("logs", { teamId, workerId, ...log });
+    ids.push(workerId);
   }
+  // One teammate's shortcut, already shared up and learned by two others; one admin idea not sent yet.
+  await ctx.db.insert("playbooks", {
+    teamId,
+    title: "Match invoices to POs with ChatGPT",
+    category: "Invoice matching",
+    steps: [
+      "Paste the invoice line and the PO line",
+      "Ask AI to list every mismatch",
+      "Check each flag yourself",
+      "Send the exception email",
+    ],
+    source: "worker",
+    originatorId: ids[0],
+    adopters: 2,
+    published: true,
+  });
+  await ctx.db.insert("playbooks", {
+    teamId,
+    title: "Draft exception emails with AI",
+    category: "Exception emails",
+    steps: [
+      "Paste the facts: invoice number, amount, what's missing",
+      "Ask AI for a short, polite draft",
+      "Check the numbers and the tone yourself",
+      "Send it from your own inbox",
+    ],
+    source: "admin",
+    adopters: 0,
+    published: false,
+  });
   return null;
 }
 
