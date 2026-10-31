@@ -11,7 +11,7 @@ import { api } from "../../convex/_generated/api";
 import { errorText } from "./dashboard";
 import { clock, Recorder } from "./recorder";
 import { isDemoEmployer, setDemoEmployer } from "@/lib/demo";
-import { SignBand } from "./route";
+import { EmployeeBand } from "./chat";
 
 type Source = "voice" | "text" | "screen" | "video" | "link";
 type Step = { title: string; detail: string; check: string };
@@ -264,25 +264,19 @@ export function Teach() {
 
   return (
     <div className="min-h-screen">
-      <SignBand>
-        <p className="hidden min-w-0 truncate border-l border-white/25 pl-4 text-white/80 sm:block">Teach the AI</p>
-        <div className="ml-auto flex items-center gap-4">
-          <a href="#/train" className="whitespace-nowrap font-semibold underline-offset-4 hover:underline">
-            Open employee view
-          </a>
-          {isDemoEmployer() ? (
-            <button
-              type="button"
-              onClick={() => setDemoEmployer(false)}
-              className="whitespace-nowrap rounded-full border border-white/40 px-3 py-1 text-sm font-semibold hover:bg-white/10"
-            >
-              Demo employer · Exit demo
-            </button>
-          ) : (
-            <UserButton />
-          )}
-        </div>
-      </SignBand>
+      <EmployeeBand active="#/">
+        {isDemoEmployer() ? (
+          <button
+            type="button"
+            onClick={() => setDemoEmployer(false)}
+            className="whitespace-nowrap rounded-full border border-white/40 px-3 py-1 text-sm font-semibold hover:bg-white/10"
+          >
+            Demo employer · Exit demo
+          </button>
+        ) : (
+          <UserButton />
+        )}
+      </EmployeeBand>
       <main className="mx-auto grid max-w-[1200px] gap-10 px-4 py-10 sm:px-8">
         <div>
           <h1 className="text-[2.25rem] font-bold leading-tight tracking-[-0.025em] sm:text-[3rem]">

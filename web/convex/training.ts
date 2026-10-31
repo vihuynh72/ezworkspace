@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { action, internalMutation, internalQuery, type ActionCtx } from "./_generated/server";
+import { action, internalMutation, internalQuery, query, type ActionCtx } from "./_generated/server";
 import { claude, imageData } from "./util";
 import { join } from "./workers";
 
@@ -91,6 +91,25 @@ async function coachStep(sop: Sop, step: number, message: string, image?: string
   );
   return out && { done: out.done, reply: out.reply.trim() };
 }
+
+// The browser's own progress on each training, for the Training list. Keyed by device id, like say.
+export const mine = query({
+  args: { deviceId: v.string() },
+  handler: async (ctx, { deviceId }) => {
+    if (!/^[\w-]{8,64}$/.test(deviceId)) return [];
+    const w = await ctx.db.query("workers").withIndex("by_phone", (q) => q.eq("phone", `web:${deviceId}`)).unique();
+    if (!w) return [];
+    const rows = await ctx.db.query("trainings").withIndex("by_worker", (q) => q.eq("workerId", w._id)).take(100);
+    return await Promise.all(
+      rows.map(async (r) => ({
+        sopId: r.sopId,
+        step: r.step,
+        total: (await ctx.db.get("sops", r.sopId))?.steps.length ?? 0,
+        done: r.done,
+      })),
+    );
+  },
+});
 
 // Finds or starts this worker's training on a published SOP; leaving it with EXIT is undone here.
 export const open = internalMutation({

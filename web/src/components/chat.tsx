@@ -552,38 +552,46 @@ export function Chat() {
 }
 
 const TABS = [
+  ["#/", "Employer"],
   ["#/train", "Training"],
   ["#/text", "Ask the coach"],
   ["#/me", "My progress"],
 ] as const;
 
-/** The employee side's band: wordmark, the privacy promise, and the three tabs. No sign-in needed. */
-export function EmployeeBand({ active }: { active: (typeof TABS)[number][0] }) {
+/** The one top bar on every page past the landing. The wordmark always leads home; children fill the right side. */
+export function EmployeeBand({ active, children }: { active: (typeof TABS)[number][0]; children?: ReactNode }) {
   return (
     <header className="shrink-0 bg-primary pt-[env(safe-area-inset-top)] text-primary-foreground">
-      <div className="mx-auto max-w-[960px] px-4 pt-3 sm:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-6 px-4 sm:px-8 md:h-14 md:flex-nowrap">
+        <a href="#/home" aria-label="ezworkspace home" className="flex h-12 shrink-0 items-center rounded-sm md:h-auto">
           <Wordmark className="text-lg leading-tight" />
-          <p className="flex items-center gap-1.5 text-sm text-white/85">
-            <LockClosedIcon aria-hidden className="h-3.5 w-3.5 shrink-0" />
-            Private. Only you see this.
-          </p>
-        </div>
-        <nav aria-label="Sections" className="-mx-2 mt-2 flex gap-1 overflow-x-auto">
+        </a>
+        <nav
+          aria-label="Main"
+          className="order-last -mx-2.5 flex w-[calc(100%+1.25rem)] gap-1 overflow-x-auto md:order-none md:mx-0 md:w-auto md:self-stretch"
+        >
           {TABS.map(([href, label]) => (
             <a
               key={href}
               href={href}
               aria-current={active === href ? "page" : undefined}
               className={cn(
-                "whitespace-nowrap border-b-4 px-2.5 pb-2.5 pt-1.5 text-base font-semibold transition-colors duration-150",
-                active === href ? "border-signal text-white" : "border-transparent text-white/70 hover:text-white",
+                "flex items-center whitespace-nowrap border-y-4 border-t-transparent px-2.5 py-2 text-base font-semibold transition-colors duration-150",
+                active === href ? "border-b-signal text-white" : "border-b-transparent text-white/70 hover:text-white",
               )}
             >
               {label}
             </a>
           ))}
         </nav>
+        <div className="ml-auto flex shrink-0 items-center gap-3 text-sm">
+          {children ?? (
+            <p className="flex items-center gap-1.5 text-white/85">
+              <LockClosedIcon aria-hidden className="h-3.5 w-3.5 shrink-0" />
+              Private. Only you see this.
+            </p>
+          )}
+        </div>
       </div>
     </header>
   );
