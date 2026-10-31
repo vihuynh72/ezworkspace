@@ -9,6 +9,7 @@
  */
 
 import type * as ingest from "../ingest.js";
+import type * as knowledge from "../knowledge.js";
 import type * as lib from "../lib.js";
 import type * as outbox from "../outbox.js";
 import type * as paths from "../paths.js";
@@ -17,6 +18,7 @@ import type * as registry from "../registry.js";
 import type * as seed from "../seed.js";
 import type * as team from "../team.js";
 import type * as util from "../util.js";
+import type * as vision from "../vision.js";
 import type * as voice from "../voice.js";
 import type * as workers from "../workers.js";
 
@@ -28,6 +30,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ingest: typeof ingest;
+  knowledge: typeof knowledge;
   lib: typeof lib;
   outbox: typeof outbox;
   paths: typeof paths;
@@ -36,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   team: typeof team;
   util: typeof util;
+  vision: typeof vision;
   voice: typeof voice;
   workers: typeof workers;
 }>;

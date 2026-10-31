@@ -1,8 +1,9 @@
 import { ConvexError, v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx } from "./_generated/server";
-import { sealed, teamMap, value, VALUE_SOURCES } from "./lib";
+import { MIN_GROUP, sealed, teamMap, value, VALUE_SOURCES } from "./lib";
 import { readiness, suggest } from "./paths";
+import { isOnTrack } from "./progress";
 import { getTeam, requireCoo, teamCompact, teamLogs, teamWorkers } from "./util";
 
 // The only read the employer gets. Nothing per-person ever leaves this function.
@@ -34,6 +35,7 @@ export const overview = query({
       practiceSessions: isSealed ? null : workers.reduce((sum, w) => sum + (w.practiced ?? 0), 0),
       // Counts per guided path; 1-2 people show as null ("under 3"), never per person.
       readiness: isSealed ? null : readiness(workers),
+      teamOnTrack: isSealed || voices < MIN_GROUP ? null : teamOnTrack(workers, playbooks ?? []),
       map: isSealed ? null : teamMap(logs),
       value: isSealed ? null : { ...value(logs, voices, team.hourlyCost), sources: VALUE_SOURCES },
       // Who shared a workflow stays private: originatorId never leaves the server.
@@ -45,6 +47,12 @@ export const overview = query({
     };
   },
 });
+
+// How many workers are on track, as one team count. Never which ones.
+function teamOnTrack(workers: Doc<"workers">[], playbooks: Doc<"playbooks">[]) {
+  const published = playbooks.filter((p) => p.published).map((p) => p.title);
+  return { onTrack: workers.filter((w) => isOnTrack(w, published)).length, total: workers.length };
+}
 
 export const signCompact = mutation({
   args: {},

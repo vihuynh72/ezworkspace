@@ -62,6 +62,16 @@ export default defineSchema({
   })
     .index("by_sent", ["sent"])
     .index("by_to", ["to"]),
+  // Team SOPs and guides the COO adds, so the coach can cite them. Never worker data.
+  knowledge: defineTable({
+    teamId: v.id("teams"),
+    title: v.string(),
+    kind: v.union(v.literal("url"), v.literal("text"), v.literal("video")),
+    url: v.optional(v.string()),
+    text: v.string(), // at most 15,000 characters
+    chars: v.number(),
+    addedAt: v.number(),
+  }).index("by_team", ["teamId"]),
   // Public registry of Compact signers, kept honest by a Firecrawl search of WARN/layoff notices.
   registry: defineTable({
     company: v.string(),

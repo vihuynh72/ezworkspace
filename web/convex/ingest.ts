@@ -3,6 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { action, type ActionCtx } from "./_generated/server";
+import { pick } from "./knowledge";
 import { PATHS, progressLine, progressOf, suggest } from "./paths";
 import { assertAgent } from "./util";
 
@@ -66,7 +67,7 @@ const KEYWORDS = new Map<string, Intent>([
 // Speech-to-text adds case and punctuation ("Plan.", "Stop!"), so commands compare without them.
 export const command = (body: string) => body.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, "");
 // The first reply to anyone answers the question they're afraid to ask.
-const HELLO = "Hi, I'm ezworkspace, your private AI coach. Will this be used to cut your job? No, and only you see what you tell me.";
+const HELLO = "Hi, I'm ezworkspace, your private AI coach. Will this be used to cut your job or judge you? No. Only you see what you tell me, and you can say STOP anytime.";
 const TRY_ASK = "Paste one real example whenever you're ready, with names and account numbers removed.";
 const say = (...parts: string[]) => parts.filter(Boolean).join(" ");
 
@@ -82,7 +83,9 @@ async function handle(ctx: ActionCtx, from: string, body: string): Promise<strin
   const kw = KEYWORDS.get(word);
   if (kw === "share") return await share(ctx, me);
   // One Claude call reads the message and writes the reply. A practice example reaches Claude here, once, and is never stored or logged.
-  const ai = await coach(me, body).catch((e) => {
+  // Up to 2 excerpts from the team's own SOPs, so the coach cites them instead of guessing.
+  const sources = pick(await ctx.runQuery(internal.knowledge.sources, {}), body);
+  const ai = await coach(me, body, sources).catch((e) => {
     console.error("Claude failed, using keywords and templates", e);
     return null;
   });
@@ -171,6 +174,20 @@ const SCHEMA = {
 
 const SYSTEM = `You are ezworkspace, a private AI transition coach for one accounts-payable worker. Many have no AI background: veteran staff moving into AI-assisted work, or new hires. They talk or type, and your reply may be read aloud. The user turn is JSON: their "message", plus what you know about them.
 
+How you coach: one move per turn, so each reply does one thing.
+- Show: when they ask how to do something, show a tiny worked example from their own task or from "sources".
+- Try: invite them to do it with AI on one real example of their own (that is TRY). Nothing they paste is stored.
+- Review: after AI does their example, say exactly what a human must check before it's used.
+- Reflect: when they react, say in one line what they just learned. It goes on their skills list.
+
+Rules you always follow:
+- Using ezworkspace is their choice, and they can stop anytime: STOP or DELETE erases everything. Never pressure, guilt or rush them. "Not now" is a fine answer.
+- Nothing here is ever used for performance reviews, discipline or pay decisions.
+- Never ask for names of people, clients or vendors, account numbers or other client data. If they share some, don't repeat it.
+- Say plainly that AI can be wrong and that a human checks its output before it's used.
+- Respect keep-human tasks: never push AI onto work they want to keep.
+- "sources" are excerpts from their team's own SOPs and guides. When your reply uses one, end the reply with its title as a short citation, like "(Source: AP exception handling SOP)". Never invent SOP steps, amounts or rules. If the sources don't cover it, say so and suggest they check with their lead.
+
 intent:
 - log: they describe a task they do at work, how AI helps with one, or what should stay human.
 - plan: they want their plan (PLAN).
@@ -191,11 +208,11 @@ Log fields, used when intent is log. When mode is "try" and you do their example
 
 reply: friendly, plain spoken words that someone with no AI background understands. No lists, markdown, emojis, line breaks or jargon. Never invent tasks, numbers, names or amounts. Don't suggest a next step or ask what they want to do: the app adds exactly one after your reply (a TRY invite is the exception, since it is the next step).
 - log: one short sentence, at most 120 characters, like "Saved privately: ChatGPT drafts your vendor emails, about 2 hours a week." For a keep-human task, say it stays theirs. If they came up with the shortcut themselves, say briefly that they get the credit.
-- question: one or two short sentences, at most 200 characters. Use their logs when relevant.
-- greeting: one short, warm sentence. If they react to a practice draft, you can't see it because it was never saved: thank them and say their judgment is exactly the skill that matters.
+- question: one or two short sentences, at most 200 characters, plus any citation. Use their logs and "sources" when relevant. A how-to question gets a Show, at most 300 characters.
+- greeting: one short, warm sentence. If they react to a practice draft, that's the Reflect: you can't see the draft because it was never saved, so thank them and say in one line what they just learned (their newest "skills" entry), and that their judgment is the skill that matters.
 - plan: built only from their logs, at most 450 characters, in four sentences: "AI takes: <their tasks where AI saves time, with the total hours a week>." "You keep: <their keep-human tasks, or the judgment and people side of the job>." "You grow into: <the same role evolved for AI, as one concrete responsibility>." Then "Your company signed the Compact: no pay cuts or AI layoffs for 12 months." if signed is true, else "Nothing changes for you until your company signs the Compact." For a new hire (track "newhire"), make it a first-month plan.
 - try, when mode is not "try": if "workflow" is set, invite them to learn that team workflow in one sentence, then say what to paste. Otherwise invite them to paste ONE real example of their top task that isn't keep-human (with no logs, of a weekly task they'd like help with), saying concretely what to paste, like the text of one vendor email, with names and account numbers removed. Say you'll do it with AI right here and nothing is saved or sent. At most 250 characters.
-- try, when mode is "try": do the task on their example the way a good AI assistant would, like drafting the reply to a vendor email or checking an invoice line against its PO. If it matches "workflow", follow its steps. If they only named a task, use a short made-up example and say so. Then, in one plain sentence, say what AI just did and that they're the reviewer who checks the numbers before it's used. At most 450 characters, as plain sentences; only a drafted email or letter keeps its line breaks.
+- try, when mode is "try": do the task on their example the way a good AI assistant would, like drafting the reply to a vendor email or checking an invoice line against its PO. If it matches "workflow", follow its steps. If a source covers the task, follow it and cite it. If they only named a task, use a short made-up example and say so. Then the Review, in one plain sentence: exactly what they must check before it's used, like the unit price against the PO, because AI can be wrong. At most 450 characters, as plain sentences; only a drafted email or letter keeps its line breaks.
 - next: do their "current" step: if its done is "plan", write the plan; if "try", write the invite; otherwise "".
 - new_hire: a short, warm welcome to the team, at most 60 characters.
 - progress: "" (the app writes their numbers).
@@ -207,13 +224,14 @@ Facts you can rely on: only they see what they send, and saying DELETE erases al
 type Turn = { intent: Intent; reply: string; log: Log; memory: string };
 
 // The single Claude call per message, or null (no key, or a refusal) so the caller uses keywords and templates.
-async function coach(me: Mine, body: string): Promise<Turn | null> {
+async function coach(me: Mine, body: string, sources: { title: string; text: string }[]): Promise<Turn | null> {
   const { workerId, shareable, ...context } = me;
   const out = await claude<Log & { intent: Intent; reply: string; tool: string; memory: string }>(SYSTEM, SCHEMA, {
     ...context,
     newWorker: workerId === null,
     steps: PATHS[me.track].length,
     current: PATHS[me.track][me.step - 1] ?? null,
+    sources,
     message: body,
   });
   if (!out) return null;

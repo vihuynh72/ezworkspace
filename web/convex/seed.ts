@@ -1,6 +1,18 @@
 import { internalMutation, mutation, type MutationCtx } from "./_generated/server";
 import { requireCoo } from "./util";
 
+// The team's own SOP, so the coach's answers cite something real.
+const AP_SOP = `AP exception handling SOP
+Use this when an invoice does not match its purchase order (PO).
+1. Put the invoice on hold. Do not pay it until the mismatch is fixed.
+2. Check the quantity. Compare the invoice quantity with the PO and the receiving record.
+3. Check the unit price. Compare the invoice unit price with the PO unit price.
+4. Check the receiving record. Pay only for goods the warehouse marked as received.
+5. Email the vendor with the template: "Hi, invoice [number] does not match PO [number]. The invoice shows [quantity or unit price], but the PO shows [quantity or unit price]. Please send a corrected invoice or a credit memo."
+6. If the difference is over $5,000, escalate to the AP lead before you reply to the vendor.
+7. Log the exception in the AP exception log: invoice number, PO number, type of mismatch, amount and next step.
+8. Release the invoice for payment only when the corrected invoice or credit memo matches the PO.`;
+
 // 4 seeded voices so the judge's text is the 5th. "Exception emails" starts at 2 people (hidden),
 // so a judge who texts about emails makes a hidden category appear.
 const SEED = [
@@ -27,7 +39,7 @@ const SEED = [
 ];
 
 async function reseed(ctx: MutationCtx) {
-  for (const table of ["outbox", "compacts", "playbooks", "logs", "workers", "teams"] as const) {
+  for (const table of ["outbox", "compacts", "playbooks", "knowledge", "logs", "workers", "teams"] as const) {
     for await (const doc of ctx.db.query(table)) await ctx.db.delete(table, doc._id);
   }
   const teamId = await ctx.db.insert("teams", {
@@ -35,6 +47,9 @@ async function reseed(ctx: MutationCtx) {
     company: "Acme Insurance",
     quorum: 5,
     hourlyCost: 48,
+  });
+  await ctx.db.insert("knowledge", {
+    teamId, title: "AP exception handling SOP", kind: "text", text: AP_SOP, chars: AP_SOP.length, addedAt: Date.now(),
   });
   const ids = [];
   for (const [i, logs] of SEED.entries()) {
