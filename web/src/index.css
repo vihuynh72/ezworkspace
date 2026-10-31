@@ -121,3 +121,94 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Landing: faint floor-plan grid on the charcoal, and the living demo's sequence. Each scene remounts when it
+   becomes active, so these play once per pass; reduced motion lands every element on its final frame. */
+@layer components {
+  .lp-grid {
+    background-image: linear-gradient(hsl(0 0% 100% / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(0 0% 100% / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 75% 80% at 75% 35%, #000 25%, transparent 80%);
+  }
+  .lp-in {
+    animation: lp-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) both;
+  }
+  .lp-write {
+    animation: lp-write 0.6s steps(22, end) var(--d, 0s) both;
+  }
+  .lp-blip {
+    animation: lp-blip 1s ease-out var(--d, 0s) both;
+  }
+  .lp-cursor {
+    animation: lp-cursor 1.5s cubic-bezier(0.65, 0, 0.35, 1) 0.6s both;
+  }
+  .lp-press {
+    animation: lp-press 0.35s ease-out 2.2s both;
+  }
+  .lp-rec {
+    animation: lp-rec 1.4s ease-in-out infinite;
+  }
+  .lp-wave > i {
+    transform-origin: center;
+    animation: lp-wave 0.8s ease-in-out var(--d, 0s) infinite alternate;
+  }
+}
+
+@keyframes lp-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes lp-write {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes lp-blip {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+}
+@keyframes lp-cursor {
+  from {
+    transform: translate(-150px, -70px);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes lp-press {
+  50% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 4px hsl(var(--signal));
+  }
+}
+@keyframes lp-rec {
+  50% {
+    opacity: 0.3;
+  }
+}
+@keyframes lp-wave {
+  from {
+    transform: scaleY(0.3);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}

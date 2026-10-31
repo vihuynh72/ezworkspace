@@ -9,6 +9,8 @@ import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../../convex/_generated/api";
 import { errorText } from "./dashboard";
+import { clock, Recorder } from "./recorder";
+import { isDemoEmployer, setDemoEmployer } from "@/lib/demo";
 import { SignBand } from "./route";
 
 type Source = "voice" | "text" | "screen" | "video" | "link";
@@ -35,7 +37,6 @@ const speech = window as unknown as Record<"SpeechRecognition" | "webkitSpeechRe
 const Recognizer = speech.SpeechRecognition ?? speech.webkitSpeechRecognition;
 
 const join = (a: string, b: string) => [a.trim(), b.trim()].filter(Boolean).join(" ");
-const clock = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`;
 
 // Frames go to the model as base64 JPEG without the data: prefix, at most 1280px and 300 KB each.
 function grab(source: CanvasImageSource, width: number, height: number) {
@@ -152,6 +153,7 @@ function useMic() {
 
   return { listening, error, start, stop };
 }
+export type Mic = ReturnType<typeof useMic>;
 
 export function Teach() {
   const draftSop = useAction(api.sops.draft);
@@ -168,6 +170,7 @@ export function Teach() {
   const [since, setSince] = useState<number | null>(null);
   const [now, setNow] = useState(0);
   const [narration, setNarration] = useState("");
+  const [inApp, setInApp] = useState(false);
   const stopScreen = useRef<((send?: boolean) => void) | null>(null);
   useEffect(() => () => stopScreen.current?.(false), []);
 
@@ -189,7 +192,7 @@ export function Teach() {
   async function recordScreen(practice = false) {
     setError("");
     setNotice("");
-    if (practice) window.open("/demo-invoice.html", "_blank");
+    if (practice) window.open("/acme/", "_blank");
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -251,8 +254,13 @@ export function Teach() {
   }
 
   const recording = since !== null;
-  const locked = busy || recording;
+  const locked = busy || recording || inApp;
   const shownError = error || mic.error;
+  const status = busy ? (
+    <p className="text-lg font-bold">Writing your SOP...</p>
+  ) : shownError ? (
+    <p className="text-destructive">{shownError}</p>
+  ) : null;
 
   return (
     <div className="min-h-screen">
@@ -262,7 +270,17 @@ export function Teach() {
           <a href="#/train" className="whitespace-nowrap font-semibold underline-offset-4 hover:underline">
             Open employee view
           </a>
-          <UserButton />
+          {isDemoEmployer() ? (
+            <button
+              type="button"
+              onClick={() => setDemoEmployer(false)}
+              className="whitespace-nowrap rounded-full border border-white/40 px-3 py-1 text-sm font-semibold hover:bg-white/10"
+            >
+              Demo employer · Exit demo
+            </button>
+          ) : (
+            <UserButton />
+          )}
         </div>
       </SignBand>
       <main className="mx-auto grid max-w-[1200px] gap-10 px-4 py-10 sm:px-8">
@@ -276,6 +294,20 @@ export function Teach() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
+          <Tile
+            className="md:col-span-2"
+            title="Show it in the app"
+            hint="Do the task once in your company app, right here. Every click becomes a step. Nothing records your computer."
+          >
+            <Recorder
+              mic={mic}
+              disabled={busy || recording || (mic.listening && !inApp)}
+              status={status}
+              onRecording={setInApp}
+              onWrite={(said) => void write({ source: "screen", text: said })}
+            />
+          </Tile>
+
           <Tile title="Describe it" hint="Talk or type, the way you'd explain it to a new hire.">
             <Textarea
               aria-label="Describe the task"
@@ -327,7 +359,7 @@ export function Teach() {
               <div className="flex flex-wrap gap-2">
                 <Button
                   className="bg-signal font-bold text-signal-foreground hover:bg-signal/90"
-                  disabled={busy || mic.listening || !navigator.mediaDevices?.getDisplayMedia}
+                  disabled={locked || mic.listening || !navigator.mediaDevices?.getDisplayMedia}
                   onClick={() => void recordScreen(true)}
                 >
                   Record a task
@@ -335,7 +367,7 @@ export function Teach() {
                 <Button
                   variant="outline"
                   className="border-input"
-                  disabled={busy || mic.listening || !navigator.mediaDevices?.getDisplayMedia}
+                  disabled={locked || mic.listening || !navigator.mediaDevices?.getDisplayMedia}
                   onClick={() => void recordScreen()}
                 >
                   Start recording
@@ -388,13 +420,7 @@ export function Teach() {
         </div>
 
         <div aria-live="polite">
-          {busy ? (
-            <p className="text-lg font-bold">Writing your SOP...</p>
-          ) : shownError ? (
-            <p className="text-destructive">{shownError}</p>
-          ) : notice ? (
-            <p className="text-lg font-bold text-go">{notice}</p>
-          ) : null}
+          {status ?? (notice ? <p className="text-lg font-bold text-go">{notice}</p> : null)}
         </div>
 
         {draft && (
@@ -432,9 +458,11 @@ export function Teach() {
   );
 }
 
-function Tile({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
+function Tile({ title, hint, className, children }: { title: string; hint: string; className?: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-lg border bg-card p-5 shadow-[0_1px_2px_rgb(0_0_0/0.05)] sm:p-6">
+    <section
+      className={cn("flex flex-col gap-4 rounded-lg border bg-card p-5 shadow-[0_1px_2px_rgb(0_0_0/0.05)] sm:p-6", className)}
+    >
       <div>
         <h2 className="text-xl font-bold leading-snug tracking-[-0.01em]">{title}</h2>
         <p className="mt-1 text-muted-foreground">{hint}</p>

@@ -32,6 +32,7 @@ import {
   useVoice,
   type Recognition,
 } from "./chat";
+import { IMessageCard } from "./imessage-card";
 
 type Sop = FunctionReturnType<typeof api.sops.list>[number];
 type Line = { id: string; role: "me" | "coach"; body: string };
@@ -83,6 +84,9 @@ export function Train() {
                 ))}
               </ul>
             )}
+            <div className="mt-8">
+              <IMessageCard />
+            </div>
           </main>
         </div>
       )}
@@ -457,7 +461,7 @@ function Session({ sop, deviceId, onExit }: { sop: Sop; deviceId: string; onExit
                   The AI looks only when you tap. Nothing is saved.
                 </span>
                 <a
-                  href="/demo-invoice.html"
+                  href="/acme/"
                   target="_blank"
                   rel="noopener"
                   className="font-semibold text-foreground underline underline-offset-4"
