@@ -141,6 +141,8 @@ async function handleCall(req: Request): Promise<Response> {
 if (callsOn) Bun.serve({ port: 8787, idleTimeout: 30, fetch: handleCall });
 
 for await (const [space, message] of app.messages) {
+  // One masked line per event so dropped messages are visible in the log.
+  console.log(`[event] ${message.direction} ${imessage(space).type} ${message.content.type} from=${message.sender?.id ? "..." + message.sender.id.slice(-4) : "none"}`);
   if (message.direction === "outbound") continue;
   if (imessage(space).type !== "dm") continue; // disclosures are private: never ingest or answer in a group
   const content = message.content.type === "reply" ? message.content.content : message.content; // swipe-replies carry text too
