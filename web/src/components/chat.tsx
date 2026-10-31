@@ -1,3 +1,4 @@
+import { Wordmark } from "@/components/route";
 import { cn } from "@/lib/utils";
 import {
   CameraIcon,
@@ -20,9 +21,9 @@ type Msg = { id: string; role: "me" | "coach"; body: string; at: number; image?:
 type Saved = { messages: Msg[]; seen: string[]; chatted: boolean };
 
 const WELCOME: Msg[] = [
-  "Hi, I'm ezworkspace, a private coach for your work. No AI experience needed.",
-  "Will this be used to cut your job? No. Your company sees nothing until 5 coworkers join and it promises no pay cuts or AI layoffs for 12 months. Then it sees team totals only, never your messages.",
-  "Tell me one thing you do every week. Or ask me anything.",
+  "Hi, I'm your ezworkspace coach. Ask me anything about your work. No AI experience needed.",
+  "This is for your growth, not to replace you. Your questions stay private. Your company sees completion totals only.",
+  "Tell me one thing you do every week. Or open Training to learn your team's way of working.",
 ].map((body, i) => ({ id: `welcome-${i}`, role: "coach", body, at: 0 }));
 
 // Sent exactly as written: the server understands plain words.
@@ -36,7 +37,7 @@ const ERASE = /^\s*(delete|stop|forget me)\s*$/i;
 const SILENT = "data:audio/wav;base64,UklGRiUAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQEAAACA";
 
 // Web Speech is prefixed in Chrome and Safari and missing in Firefox; without it the chat is text only.
-type Recognition = {
+export type Recognition = {
   lang: string;
   interimResults: boolean;
   onresult: ((e: { results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
@@ -47,9 +48,9 @@ type Recognition = {
   abort(): void;
 };
 const speech = window as unknown as Record<"SpeechRecognition" | "webkitSpeechRecognition", (new () => Recognition) | undefined>;
-const Recognizer = speech.SpeechRecognition ?? speech.webkitSpeechRecognition;
+export const Recognizer = speech.SpeechRecognition ?? speech.webkitSpeechRecognition;
 
-function micError(code: string) {
+export function micError(code: string) {
   if (code === "no-speech") return "I didn't hear anything. Tap the mic and try again.";
   if (code.endsWith("not-allowed")) return "Your browser blocked the mic. Allow it, or type instead.";
   return "The mic isn't working right now. Type instead.";
@@ -57,7 +58,7 @@ function micError(code: string) {
 
 // Every storage access can throw (private mode, blocked site data); memory keeps the session working.
 const memory = new Map<string, string>();
-function load(key: string) {
+export function load(key: string) {
   try {
     const value = localStorage.getItem(key);
     if (value !== null) return value;
@@ -66,7 +67,7 @@ function load(key: string) {
   }
   return memory.get(key) ?? null;
 }
-function save(key: string, value: string) {
+export function save(key: string, value: string) {
   memory.set(key, value);
   try {
     localStorage.setItem(key, value);
@@ -75,7 +76,7 @@ function save(key: string, value: string) {
   }
 }
 
-function deviceIdOnce() {
+export function deviceIdOnce() {
   let id = load("ezw.deviceId");
   if (!id) {
     // randomUUID only exists on https or localhost; a phone on plain-http LAN gets the fallback.
@@ -115,8 +116,8 @@ async function shrink(file: File): Promise<string> {
   }
 }
 
-const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-const failure = (e: unknown, fallback: string) => (e instanceof ConvexError ? String(e.data) : fallback);
+export const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+export const failure = (e: unknown, fallback: string) => (e instanceof ConvexError ? String(e.data) : fallback);
 
 export function Chat() {
   const [deviceId] = useState(deviceIdOnce);
@@ -306,15 +307,7 @@ export function Chat() {
   const busy = pending || listening;
   return (
     <div className="flex h-[100dvh] flex-col bg-card">
-      <header className="shrink-0 bg-primary pt-[env(safe-area-inset-top)] text-primary-foreground">
-        <div className="mx-auto max-w-[680px] px-4 py-2.5">
-          <h1 className="text-lg font-bold leading-tight">ezworkspace</h1>
-          <p className="mt-0.5 flex items-center gap-1.5 text-sm text-white/85">
-            <LockClosedIcon aria-hidden className="h-3.5 w-3.5 shrink-0" />
-            Private. Only you see this.
-          </p>
-        </div>
-      </header>
+      <EmployeeBand active="#/text" />
       <Quiet>
         <Progress deviceId={deviceId} />
       </Quiet>
@@ -558,6 +551,44 @@ export function Chat() {
   );
 }
 
+const TABS = [
+  ["#/train", "Training"],
+  ["#/text", "Ask the coach"],
+  ["#/me", "My progress"],
+] as const;
+
+/** The employee side's band: wordmark, the privacy promise, and the three tabs. No sign-in needed. */
+export function EmployeeBand({ active }: { active: (typeof TABS)[number][0] }) {
+  return (
+    <header className="shrink-0 bg-primary pt-[env(safe-area-inset-top)] text-primary-foreground">
+      <div className="mx-auto max-w-[960px] px-4 pt-3 sm:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <Wordmark className="text-lg leading-tight" />
+          <p className="flex items-center gap-1.5 text-sm text-white/85">
+            <LockClosedIcon aria-hidden className="h-3.5 w-3.5 shrink-0" />
+            Private. Only you see this.
+          </p>
+        </div>
+        <nav aria-label="Sections" className="-mx-2 mt-2 flex gap-1 overflow-x-auto">
+          {TABS.map(([href, label]) => (
+            <a
+              key={href}
+              href={href}
+              aria-current={active === href ? "page" : undefined}
+              className={cn(
+                "whitespace-nowrap border-b-4 px-2.5 pb-2.5 pt-1.5 text-base font-semibold transition-colors duration-150",
+                active === href ? "border-signal text-white" : "border-transparent text-white/70 hover:text-white",
+              )}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
 // A missing or failing progress query hides the strip instead of taking the chat down.
 class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -586,7 +617,7 @@ function Progress({ deviceId }: { deviceId: string }) {
 }
 
 /** Pictogram mic drawn on the Radix 15px grid, which has no mic of its own. */
-function MicIcon({ className }: { className?: string }) {
+export function MicIcon({ className }: { className?: string }) {
   return (
     <svg aria-hidden viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeLinecap="round" className={className}>
       <rect x="5.5" y="1.5" width="4" height="7.5" rx="2" />
@@ -595,7 +626,7 @@ function MicIcon({ className }: { className?: string }) {
   );
 }
 
-function DockButton({
+export function DockButton({
   label,
   pressed,
   disabled,
@@ -650,7 +681,7 @@ function ListenButton({ state, onClick }: { state: VoiceState; onClick: () => vo
 }
 
 /** Reads coach messages aloud through one shared player, so only one voice ever plays. */
-function useVoice(deviceId: string, setError: (text: string) => void) {
+export function useVoice(deviceId: string, setError: (text: string) => void) {
   const speak = useAction(api.voice.speak);
   const player = useRef<HTMLAudioElement | null>(null);
   const ticket = useRef(0); // bumps on every play or stop, so a slow request can't start a second voice
@@ -673,7 +704,7 @@ function useVoice(deviceId: string, setError: (text: string) => void) {
     return el;
   }
 
-  async function play(m: Msg) {
+  async function play(m: Pick<Msg, "id" | "body">) {
     stop();
     const mine = ticket.current;
     const el = clips.current.has(m.id) ? (player.current ??= new Audio()) : unlock();

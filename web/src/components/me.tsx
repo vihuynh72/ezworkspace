@@ -1,4 +1,4 @@
-import { DonePlate, SignBand } from "@/components/route";
+import { DonePlate } from "@/components/route";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowRightIcon, CheckIcon, LockClosedIcon, ReloadIcon } from "@radix-ui/react-icons";
@@ -6,6 +6,7 @@ import { useAction, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api } from "../../convex/_generated/api";
+import { EmployeeBand } from "./chat";
 
 // The same private id the chat stores. Never created here: no id means they haven't chatted yet.
 function storedDeviceId() {
@@ -22,24 +23,20 @@ export function Me() {
   const data = useQuery(api.progress.dashboard, deviceId ? { deviceId } : "skip");
   return (
     <div className="min-h-[100dvh] bg-background">
-      <SignBand>
-        <a href="#/text" className="ml-auto text-sm font-semibold underline underline-offset-4">
-          Back to chat
-        </a>
-      </SignBand>
-      <main className="mx-auto max-w-[960px] px-4 py-6 sm:px-8">
-        <h1 className="text-[1.875rem] font-bold leading-tight tracking-[-0.02em]">My workspace</h1>
-        <p className="mt-1 flex items-center gap-1.5 text-muted-foreground">
+      <EmployeeBand active="#/me" />
+      <main className="mx-auto max-w-[960px] px-4 py-8 sm:px-8">
+        <h1 className="text-[2.25rem] font-bold leading-tight tracking-[-0.02em]">My progress</h1>
+        <p className="mt-2 flex text-lg items-center gap-1.5 text-muted-foreground">
           <LockClosedIcon aria-hidden className="h-4 w-4 shrink-0" />
-          Only you see this page. Your company sees team totals only.
+          Only you see this page. Your company sees completion totals only.
         </p>
         {deviceId && data === undefined ? (
           <p className="mt-6 text-muted-foreground">Loading your workspace…</p>
         ) : !deviceId || !data ? (
           <Panel title="Nothing here yet" className="mt-6">
-            <p>Start in the chat. Tell the coach one task that eats your time.</p>
+            <p>Start a training. Each one you finish adds a skill here.</p>
             <Button asChild className="mt-4 h-11">
-              <a href="#/text">Start in the chat</a>
+              <a href="#/train">Go to Training</a>
             </Button>
           </Panel>
         ) : (
@@ -191,9 +188,9 @@ function Suggestions({ deviceId, className }: { deviceId: string; className?: st
 
 function Panel({ title, action, className, children }: { title: string; action?: ReactNode; className?: string; children: ReactNode }) {
   return (
-    <section className={cn("rounded-lg border bg-card p-5", className)}>
+    <section className={cn("rounded-lg border bg-card p-5 shadow-[0_1px_2px_rgb(0_0_0/0.05)] sm:p-6", className)}>
       <div className="mb-1 flex min-h-9 items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">{title}</h2>
+        <h2 className="text-xl font-bold tracking-[-0.01em]">{title}</h2>
         {action}
       </div>
       {children}

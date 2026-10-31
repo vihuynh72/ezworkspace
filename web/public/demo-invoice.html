@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Acme Insurance · Accounts Payable</title>
+<style>
+  :root {
+    --ground: #eef1f4; --panel: #fff; --ink: #1b2329; --muted: #5a656d; --rule: #d5dbe0;
+    --brand: #123a5c; --red: #b3261e; --red-soft: #fdecea; --green: #1d6b45; --green-soft: #e5f3ec;
+    --amber: #8a5300; --amber-soft: #fff3d1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { background: var(--brand); color: #fff; }
+  .bar { max-width: 1180px; margin: 0 auto; padding: 0 20px; height: 54px; display: flex; align-items: center; gap: 28px; }
+  .logo { font-weight: 700; font-size: 17px; white-space: nowrap; }
+  .logo span { opacity: .7; font-weight: 400; }
+  nav { display: flex; gap: 18px; font-size: 14px; overflow-x: auto; }
+  nav a { color: #fff; opacity: .75; text-decoration: none; padding: 16px 0 13px; border-bottom: 3px solid transparent; white-space: nowrap; }
+  nav a.on { opacity: 1; border-color: #fff; font-weight: 600; }
+  .user { margin-left: auto; font-size: 14px; opacity: .85; white-space: nowrap; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+  .crumbs { color: var(--muted); font-size: 13px; }
+  .head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 6px 0 16px; }
+  h1 { font-size: 24px; margin: 0; }
+  .pill { display: inline-block; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .pill.exc { background: var(--red-soft); color: var(--red); }
+  .pill.hold { background: var(--amber-soft); color: var(--amber); }
+  .pill.ok { background: var(--green-soft); color: var(--green); }
+  .banner { display: flex; gap: 12px; align-items: flex-start; background: var(--red-soft); border: 1px solid #f0b8b3; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; }
+  .banner b { color: var(--red); font-size: 17px; }
+  .banner p { margin: 2px 0 0; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(16,24,40,.05); }
+  .card h2 { font-size: 15px; margin: 0 0 2px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .card .id { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0 0 12px; font-size: 14px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--rule); padding: 6px 4px; }
+  td { border-bottom: 1px solid var(--rule); padding: 8px 4px; }
+  .num { text-align: right; }
+  .bad { color: var(--red); font-weight: 700; }
+  .good { color: var(--green); font-weight: 700; }
+  .total td { border-bottom: 0; font-weight: 700; }
+  .match { margin-top: 16px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  button { font: inherit; font-weight: 600; height: 40px; padding: 0 18px; border-radius: 6px; border: 1px solid #8b969c; background: #fff; color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  button:hover { filter: brightness(.95); }
+  button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  #log { margin: 14px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
+  .note { margin-top: 22px; color: var(--muted); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">Acme Insurance <span>· Accounts Payable</span></div>
+    <nav aria-label="Main">
+      <a class="on" href="#">Invoices</a><a href="#">Purchase orders</a><a href="#">Vendors</a><a href="#">Reports</a>
+    </nav>
+    <div class="user">J. Rivera · AP Clerk</div>
+  </div>
+</header>
+<main>
+  <div class="crumbs">Invoices › Exceptions queue › INV-20418</div>
+  <div class="head">
+    <h1>Invoice INV-20418</h1>
+    <span id="status" class="pill exc">Exception</span>
+  </div>
+
+  <div class="banner" role="alert">
+    <div>
+      <b>Price mismatch: $160.00</b>
+      <p>The invoice price is $52.00 per box. The PO price is $48.00 per box. Quantities match (40 ordered, 40 received, 40 billed).</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Vendor invoice</h2>
+      <div class="id">INV-20418</div>
+      <dl>
+        <dt>Vendor</dt><dd>Northwind Office Supply</dd>
+        <dt>Invoice date</dt><dd>10/29</dd>
+        <dt>Due date</dt><dd>11/28 (Net 30)</dd>
+        <dt>PO reference</dt><dd>PO-7731</dd>
+      </dl>
+      <table>
+        <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Copy paper, letter (box)</td><td class="num">40</td><td class="num bad">$52.00</td><td class="num">$2,080.00</td></tr>
+          <tr class="total"><td colspan="3">Invoice total</td><td class="num">$2,080.00</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Purchase order</h2>
+      <div class="id">PO-7731</div>
+      <dl>
+        <dt>Vendor</dt><dd>Northwind Office Supply</dd>
+        <dt>Approved by</dt><dd>M. Chen, Facilities</dd>
+        <dt>Contract price</dt><dd>$48.00 per box</dd>
+        <dt>PO date</dt><dd>10/14</dd>
+      </dl>
+      <table>
+        <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Copy paper, letter (box)</td><td class="num">40</td><td class="num">$48.00</td><td class="num">$1,920.00</td></tr>
+          <tr class="total"><td colspan="3">PO total</td><td class="num">$1,920.00</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Receiving record</h2>
+      <div class="id">RCV-5520</div>
+      <dl>
+        <dt>Received</dt><dd>40 boxes</dd>
+        <dt>Date</dt><dd>10/28</dd>
+        <dt>Received by</dt><dd>Loading dock B</dd>
+        <dt>Condition</dt><dd>Good, no damage</dd>
+      </dl>
+      <table>
+        <thead><tr><th>Item</th><th class="num">Ordered</th><th class="num">Received</th></tr></thead>
+        <tbody>
+          <tr><td>Copy paper, letter (box)</td><td class="num">40</td><td class="num">40</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <section class="card match">
+    <h2>Three-way match</h2>
+    <table>
+      <thead><tr><th>Check</th><th class="num">PO</th><th class="num">Received</th><th class="num">Invoice</th><th class="num">Result</th></tr></thead>
+      <tbody>
+        <tr><td>Quantity</td><td class="num">40</td><td class="num">40</td><td class="num">40</td><td class="num good">Match</td></tr>
+        <tr><td>Unit price</td><td class="num">$48.00</td><td class="num">n/a</td><td class="num">$52.00</td><td class="num bad">+$4.00 per box</td></tr>
+        <tr class="total"><td>Total</td><td class="num">$1,920.00</td><td class="num">n/a</td><td class="num">$2,080.00</td><td class="num bad">Over by $160.00</td></tr>
+      </tbody>
+    </table>
+    <div class="actions">
+      <button class="primary" type="button" data-act="hold">Put on hold</button>
+      <button type="button" data-act="email">Email vendor</button>
+      <button type="button" data-act="escalate">Escalate</button>
+    </div>
+    <ol id="log" aria-live="polite"></ol>
+  </section>
+
+  <p class="note">Practice screen for ezworkspace training. Not a real invoice.</p>
+</main>
+<script>
+  // Each action updates the status and the activity log, so a screen check can see what was done.
+  var acts = {
+    hold: ["On hold", "hold", "Put on hold. Reason: price mismatch, $160.00 over PO-7731."],
+    email: ["On hold, vendor emailed", "hold", "Emailed Northwind: asked for a corrected invoice at $48.00 per box."],
+    escalate: ["Escalated", "hold", "Escalated to the AP lead for approval."]
+  };
+  document.querySelectorAll("[data-act]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var a = acts[b.getAttribute("data-act")];
+      var status = document.getElementById("status");
+      status.textContent = a[0];
+      status.className = "pill " + a[1];
+      var li = document.createElement("li");
+      li.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + " · J. Rivera: " + a[2];
+      document.getElementById("log").appendChild(li);
+    });
+  });
+</script>
+</body>
+</html>
