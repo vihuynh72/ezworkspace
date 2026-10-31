@@ -11,8 +11,28 @@ AI is changing every job, and workers are afraid of being replaced. Replacing on
 | 1 | https://ezworkspace.vercel.app | Watch the short demo loop on the landing page. |
 | 2 | Click **Try the employer demo, no sign-in** | Use **Show it in the app** to record yourself working in the demo company app. You can also **Describe it** out loud, or paste a doc link. The AI writes the SOP. Click **Make it clearer** on a step, then **Save & publish**. |
 | 3 | Click **Training** (or go to `/#/train`) | Start **Handle an invoice price mismatch**. Talk to the coach with the mic, or tap **I did it** or **I'm stuck**. Ask *"Can I just click Release?"* and watch it correct you. **Check my screen** looks at the demo app only when you tap it. |
-| 4 | iMessage: **+1 (415) 590-1577** | Text **START** to train by text, or ask a question mid-task. Photon's free shared line only answers numbers added to the project, so use the presenter's iPhone or ask us to add yours. |
+| 4 | iMessage: **+1 (415) 590-1577** | Train by text from your own phone. See **Text the coach** below. |
 | 5 | https://ezworkspace.vercel.app/acme/index.html | **AcmeAP**, a fictional accounts-payable app to practice in. Every AI suggestion says "AI suggests. You decide." |
+
+## Text the coach on iMessage
+
+Photon's free shared line only answers phones registered on our project. One command on the presenter's laptop (signed in to Photon) adds yours:
+
+```sh
+./add-phone.sh +14155550123
+```
+
+Use your number with `+` and the country code. Then text **START** to **+1 (415) 590-1577**.
+
+| Text | What happens |
+|---|---|
+| `START` | Starts the newest training, one step at a time. |
+| `Can I just click Release?` | In the invoice training, the coach stops you and explains why. |
+| A photo of your screen | The coach checks it against your current step. |
+| `EXIT` | Leaves the training. |
+| `DELETE` | Erases everything about you. |
+
+No time? Use the presenter's iPhone at the table.
 
 **60-second video:** `video/` holds the HyperFrames source. The upload link is in the submission.
 
