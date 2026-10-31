@@ -192,7 +192,7 @@ export function Teach() {
   async function recordScreen(practice = false) {
     setError("");
     setNotice("");
-    if (practice) window.open("/acme/", "_blank");
+    if (practice) window.open("/acme/index.html", "_blank");
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getDisplayMedia({ video: true });

@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "roboto",
+        "createdAt": "2026-10-31T03:24:24.519Z",
+        "reason": "Claude decided: /acme/ is an intentional demo fixture imitating a separate fictional company's internal tool, so it deliberately uses its own type, not ezworkspace's"
+      }
+    ]
+  }
+}

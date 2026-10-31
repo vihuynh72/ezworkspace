@@ -461,7 +461,7 @@ function Session({ sop, deviceId, onExit }: { sop: Sop; deviceId: string; onExit
                   The AI looks only when you tap. Nothing is saved.
                 </span>
                 <a
-                  href="/acme/"
+                  href="/acme/index.html"
                   target="_blank"
                   rel="noopener"
                   className="font-semibold text-foreground underline underline-offset-4"

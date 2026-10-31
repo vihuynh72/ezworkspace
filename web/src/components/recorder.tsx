@@ -8,7 +8,7 @@ export const clock = (ms: number) =>
 
 type Action = { at: number; text: string };
 
-const APP = "/acme/";
+const APP = "/acme/index.html";
 
 // What a person would call a control. A labelled landmark is a container, not something you click.
 const CONTROL =

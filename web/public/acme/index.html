@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AcmeAP · Acme Insurance</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo" aria-hidden="true">A</span><span class="brand-name">AcmeAP</span><span class="brand-sub">Acme Insurance · Accounts Payable</span></div>
+  <div class="top-right">
+    <span class="run">Next payment run <strong>Tue 11/03</strong></span>
+    <div class="user"><span class="avatar" aria-hidden="true">ML</span><span><strong>Maria Lopez</strong><small>AP Specialist</small></span></div>
+  </div>
+</header>
+<div class="shell">
+  <nav class="sidenav" aria-label="Main">
+    <a href="#/queue" data-nav="queue">Work queue <span class="count" id="queue-count"></span></a>
+    <a href="#/invoices" data-nav="invoices">Invoices</a>
+    <a href="#/vendors" data-nav="vendors">Vendors</a>
+    <a href="#/month-end" data-nav="month-end">Month-end</a>
+    <a href="#/growth" data-nav="growth">My growth</a>
+  </nav>
+  <main id="main" tabindex="-1"></main>
+  <aside class="ai" aria-labelledby="ai-title">
+    <div class="ai-head"><span class="ai-badge">AI</span><h2 id="ai-title">AI Assist</h2></div>
+    <p class="ai-motto">AI suggests. You decide.</p>
+    <div id="ai-body"></div>
+  </aside>
+</div>
+<footer class="foot"><span>AcmeAP 4.2 · Demo with a fictional company. All names, vendors and amounts are made up.</span><button type="button" class="linkish" id="reset">Reset demo</button></footer>
+<script src="app.js"></script>
+</body>
+</html>
