@@ -1,119 +1,43 @@
 # ezworkspace
 
-**Falling behind on AI is no longer a reason to let someone go. ezworkspace makes catching up part of the job.**
+**Show it once. AI onboards everyone.**
 
-**Show it once. AI onboards everyone.** The employer shows the AI how a task is done once (in the app, by voice, by video or with a doc link). The AI writes the SOP, then trains every employee step by step, by voice on the web or by text on iMessage. It's a cheaper, faster alternative to replacing or retraining people. By Vi, SJSU Responsible Computing Club.
+AI is changing every job, and workers are afraid of being replaced. Replacing one clerk costs $24.6k to $98.4k (Gallup on BLS pay), and a bootcamp takes about 14 weeks and $14k (Course Report). ezworkspace takes a different path. A manager shows the AI how a task is done once, and the AI turns it into an SOP. Then it coaches every employee through it, step by step, by voice on the web or by text on iMessage. Nobody gets left behind.
 
-## Judge access (no account needed)
+## Try it (no account needed)
 
-| What | Where |
-|---|---|
-| Live app | https://ezworkspace.vercel.app |
-| Employer view (teach the AI) | On the landing page, click **"Try the employer demo, no sign-in"** (demo mode). You can also sign in with Google or GitHub. |
-| Employee view (training) | Click **"I'm an employee"**, or open https://ezworkspace.vercel.app/#/train. No sign-in. |
-| iMessage coach (Photon) | Text **START** to **+1 (415) 590-1577**. Ask the demo presenter for their iPhone: the shared Photon line only answers numbers registered on the project. |
-| Demo company app | https://ezworkspace.vercel.app/acme/index.html (AcmeAP, a fictional accounts-payable portal) |
+| | Where | What to do |
+|---|---|---|
+| 1 | https://ezworkspace.vercel.app | Watch the short demo loop on the landing page. |
+| 2 | Click **Try the employer demo, no sign-in** | Use **Show it in the app** to record yourself working in the demo company app. You can also **Describe it** out loud, or paste a doc link. The AI writes the SOP. Click **Make it clearer** on a step, then **Save & publish**. |
+| 3 | Click **Training** (or go to `/#/train`) | Start **Handle an invoice price mismatch**. Talk to the coach with the mic, or tap **I did it** or **I'm stuck**. Ask *"Can I just click Release?"* and watch it correct you. **Check my screen** looks at the demo app only when you tap it. |
+| 4 | iMessage: **+1 (415) 590-1577** | Text **START** to train by text, or ask a question mid-task. Photon's free shared line only answers numbers added to the project, so use the presenter's iPhone or ask us to add yours. |
+| 5 | https://ezworkspace.vercel.app/acme/index.html | **AcmeAP**, a fictional accounts-payable app to practice in. Every AI suggestion says "AI suggests. You decide." |
 
-Demo mode (`DEMO_MODE=1` on the Convex deployment) is a hackathon shortcut that lets anyone act as a mock employer. It must be off for real users.
-
-## The problem
-
-- 57% of workers hide their AI use or present AI output as their own ([HRGrapevine](https://www.hrgrapevine.com/us/content/article/2025-05-02-covert-use-of-artificial-intelligence-at-work-poses-risk-study-finds), [MBS](https://www.mbs.edu/2025-impact-report/impact-stories/Global-study-reveals-trust-of-AI-remains-a-critical-challenge)).
-- 52% of US workers are worried about AI at work ([Pew](https://www.pewresearch.org/social-trends/2025/02/25/u-s-workers-are-more-worried-than-hopeful-about-future-ai-use-in-the-workplace/)).
-
-Our bet (an assumption): coaching people inside their own workflow beats firing, re-hiring or AI courses on cost and time. Replacing one clerk costs $24.6k–$98.4k, half to twice the BLS median salary ([Gallup](https://www.gallup.com/workplace/247391/fixable-problem-costs-businesses-trillion.aspx), [BLS](https://www.bls.gov/ooh/office-and-administrative-support/bookkeeping-accounting-and-auditing-clerks.htm)). A bootcamp costs ~$14k and 14 weeks per person ([Course Report](https://www.coursereport.com/coding-bootcamp-ultimate-guide)). ezworkspace maps how much of each job AI can take, then helps remake the role around the person.
+**60-second video:** `video/` holds the HyperFrames source. The upload link is in the submission.
 
 ## How it works
 
-**Worker** (iMessage or web chat, `/#/text`):
-- Text a weekly task: "ChatGPT drafts my vendor emails, saves 2 hours a week." Claude logs it privately (task, category, tool, minutes saved, keep-human, originator) and replies with what it saved and one next step.
-- Guided paths: veterans get a 5-step transition path, new hires a 3-step path into the team's AI workflow. Plain words work ("I'm new here", "let me practice", "make me a plan"), and so do `START`, `NEW` and `NEXT`.
-- `PLAN`: a Transition Plan from only their logs (AI takes, You keep, You grow into, This week), also as an iMessage voice note.
-- `TRY`: paste one real example; Claude does the task and explains how. The example goes to Claude once, never stored or sent on.
-- Questions get plain-language answers. `DELETE` erases everything. In web chat, **Listen** reads any reply aloud.
-- When the COO signs: a text with iMessage confetti.
-- **In progress tonight:** voice-first web chat (talk with the mic, replies spoken via Google TTS); a private memory (a short summary only that worker's coach uses, no raw messages kept); `SHARE` to pass a shortcut up as a playbook; personal progress (hours back, skills).
+1. **Teach.** The manager records a task inside the app (only clicks and field names, never typed values), talks it through, uploads a video, or pastes a link (read with Firecrawl). Claude writes the SOP, with a title, steps, and what to check at each step.
+2. **Publish.** Every employee gets an iMessage through Photon: *"New training… Reply START."*
+3. **Train.** A voice-first coach (Claude, with Google voice and Meta Muse speech-to-text) walks each person through one step at a time. It answers questions from the SOP and gently corrects mistakes. When the person finishes, the skill shows on their private **My progress** page.
 
-**COO** (Clerk sign-in): a live dashboard. Voices fill to 5, the COO signs the Compact's four terms (name and time stamped), the map opens: AI hours by category, the Keep List of work that stays human, AI readiness counts per path. Plus invites, Firecrawl layoff checks, a Nebula link. "Show me who said what" explains no endpoint exists. **In progress tonight:** the Value card (share of team time AI can take, hours back per week, time value per quarter, versus replacing one clerk and a bootcamp) and Playbooks with **Publish to team**.
+## Built to be ethical
 
-**The Compact:** No Worker Worse Off (no pay cuts or AI layoffs for 12 months; role changes come with a funded transition plan), paid learning time, shadow-AI amnesty (originators get credit), private by design (team totals only, groups under 3 hidden, raw messages never stored). Text in `web/src/components/terms.ts`.
+- **Nobody ends up worse off.** The training is for growth, not replacement.
+- **Private by default.** Employees' questions, chats and screens stay with them, and screen frames are never stored. Employers see completion totals only.
+- **Delete anytime.** Texting **DELETE** erases everything about that person.
+- **Demo mode.** `DEMO_MODE=1` lets judges act as a mock employer. It's a hackathon shortcut and must be off for real users.
 
-**Public:** the landing page lists the promises; `registry.list` needs no sign-in.
+## Stack
 
-**Demo** (seeded, illustrative): Acme Insurance's AP team at 4 of 5 voices. A judge's "2 hours a week" makes 21 hrs/week, 10.5% of team time (assumed 40-hour weeks); at an assumed $48/hour, $13,104 of time a quarter.
+Claude (coach, SOP writing, vision), **Photon** Spectrum (iMessage), **Convex** (live backend), **Firecrawl** (reads doc links), Clerk (sign-in), Meta Muse and Google TTS (voice), Vercel (hosting).
 
-## Ethics by construction
-
-- **Sealed until 5 voices and a signed Compact:** `sealed()` in `web/convex/lib.ts`; `team.overview` reads no logs while sealed.
-- **Team totals only:** `team.overview`, the employer's only view of workers, returns aggregates, never per-person rows; per-worker functions are `internal`.
-- **Groups under 3 hidden:** `MIN_GROUP` in `teamMap()` and `readiness()`, Keep List included.
-- **Shadow-AI amnesty:** logs keep an `originator` flag so credit can go to whoever found a shortcut; the employer never sees who.
-- **No Worker Worse Off:** a contract term and the price of the map; `team.signCompact` stamps the 12-month floor, signer and time.
-- **Layoff check:** a Firecrawl hit only sets `pending_review` for a human (`registry.ts`).
-- **Right to leave:** `DELETE` runs `workers.forget`, deleting logs, membership and outbox texts.
-- **Private channel:** the agent ignores group chats; agent-only functions check `AGENT_SECRET`.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  phone["Worker's iPhone"] <-->|iMessage| photon["Photon Spectrum"]
-  photon <--> agent["agent (Bun)"]
-  agent <-->|"AGENT_SECRET"| convex["Convex functions"]
-  convex <-->|live queries| react["React dashboard + web chat"]
-  react -->|sign-in| clerk["Clerk"]
-  clerk -.->|JWT| convex
-  convex --> claude["Claude (claude-opus-5-5)"]
-  convex --> tts["Google Cloud TTS"]
-  convex --> firecrawl["Firecrawl"]
-  react -.->|link| nebula["Nebula"]
-```
-
-## Sponsor usage
-
-| Service | Use | Code |
-|---|---|---|
-| Photon Spectrum | iMessage DMs, typing indicator, PLAN voice notes, confetti on signing. Phone calls are built but off tonight (they need Photon's Business plan) | `agent/src/index.ts` |
-| Convex | Sealed aggregates, Compact, guided paths, outbox; live queries flip the counter and push texts | `web/convex/` |
-| Clerk | Gates the dashboard; stamps the Compact signer | `main.tsx`, `team.ts` |
-| Firecrawl | Searches WARN/layoff headlines naming a company | `registry.ts` |
-| Nebula | Supervised prototype: the worker approves every agent draft. Linked; setup in `docs/nebula.md` | `dashboard.tsx` |
-| Claude | Parses texts, writes plans, runs TRY, answers | `ingest.ts` |
-| Google TTS | MP3 voice notes; **Listen** in web chat | `voice.ts` |
-
-## Run it
-
-Needs Node, Bun, Photon Spectrum (iMessage), a Clerk app with a `convex` JWT template, and API keys.
+## Run locally
 
 ```sh
-(cd web && npm install) && (cd agent && bun install)
-./demo.sh   # local Convex, http://localhost:5173 (worker chat: /#/text), iMessage agent
+./demo.sh   # Convex (local), the web app on :5173, and the iMessage agent
+cd web && bun test tests/   # 18 tests
 ```
 
-Environment variables (names only):
-- `agent/.env`: `PROJECT_ID`, `PROJECT_SECRET`, `CONVEX_URL`, `AGENT_SECRET`, optional `VOICE_CALL_TOKEN` (phone calls; off tonight)
-- `web/.env.local`: `VITE_CONVEX_URL`, `VITE_CLERK_PUBLISHABLE_KEY`, optional `VITE_NEBULA_URL`
-- Convex (`CONVEX_AGENT_MODE=anonymous npx convex env set` in `web/`): `AGENT_SECRET`, `CLERK_JWT_ISSUER_DOMAIN`, `ANTHROPIC_API_KEY`, `GOOGLE_TTS_API_KEY`, `FIRECRAWL_API_KEY`
-
-Without `ANTHROPIC_API_KEY`, parsing and `PLAN` use fallbacks; `TRY` needs Claude.
-
-Reset to 4/5, unsigned: **Reset demo** twice, or `cd web && CONVEX_AGENT_MODE=anonymous npx convex run seed:run`.
-
-## Tests
-
-`cd web && bun test` checks `lib.ts` and `paths.ts`: sealing needs quorum and Compact, groups under 3 stay hidden, a path step finishes only on the turn it asks for, readiness shows team totals only, and plain words reach the right step without Claude.
-
-## Privacy model
-
-- **Stored:** phone number (or a random browser ID), parsed task logs, path and step, last plan time, practice count, and texts sent to them. In progress: a short memory summary per worker, used only by that worker's coach.
-- **Not stored:** raw messages (without Claude, the keyword fallback keeps 60 characters as a label), `TRY` examples, plan text. Web chat history stays in the browser.
-- **Sent out:** iMessages through Photon; messages and the worker's own logs to Anthropic; read-aloud text to Google; company names to Firecrawl.
-- **Limits:** Convex admins can read raw tables; any signed-in Clerk user counts as the COO.
-
-## Roadmap
-
-- **In progress tonight:** voice-first web chat, private memory, playbooks (`SHARE` up, **Publish to team** down), personal progress, the Value card.
-- Phone calls to the line, once on Photon's Business plan.
-- Clerk Organizations and roles; multiple teams.
-- Public registry page; checks at signing; due process before revocation.
-- Rate limits; check the map against measured cycle time, not only self-reports.
+The env vars are set by name only: `ANTHROPIC_API_KEY`, `FIRECRAWL_API_KEY`, `GOOGLE_TTS_API_KEY`, `MUSE_API_KEY`, `CLERK_JWT_ISSUER_DOMAIN`, `AGENT_SECRET` and `DEMO_MODE` in Convex; `PROJECT_ID`, `PROJECT_SECRET`, `CONVEX_URL` and `AGENT_SECRET` in `agent/.env`; `VITE_CLERK_PUBLISHABLE_KEY` in `web/.env.local`. Never commit them.
