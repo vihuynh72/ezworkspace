@@ -457,8 +457,22 @@ function DraftEditor({
   const publish = useMutation(api.sops.publish);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const rewrite = useAction(api.sops.rewriteStep);
+  const [rewriting, setRewriting] = useState<number | null>(null);
   const edit = (i: number, patch: Partial<Step>) =>
     setDraft({ ...draft, steps: draft.steps.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
+
+  async function clarify(i: number) {
+    setRewriting(i);
+    setError("");
+    try {
+      edit(i, await rewrite({ title: draft.title, step: draft.steps[i] }));
+    } catch (e) {
+      setError(errorText(e, "Couldn't rewrite that step. Try again."));
+    } finally {
+      setRewriting(null);
+    }
+  }
 
   async function keep(andPublish: boolean) {
     const title = draft.title.trim();
@@ -512,14 +526,19 @@ function DraftEditor({
               <Label htmlFor={`step-${i}`} className="text-base font-bold">
                 Step {i + 1}
               </Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={draft.steps.length === 1}
-                onClick={() => setDraft({ ...draft, steps: draft.steps.filter((_, j) => j !== i) })}
-              >
-                Remove step
-              </Button>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" disabled={rewriting !== null} onClick={() => void clarify(i)}>
+                  {rewriting === i ? "Rewriting…" : "Make it clearer"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={draft.steps.length === 1}
+                  onClick={() => setDraft({ ...draft, steps: draft.steps.filter((_, j) => j !== i) })}
+                >
+                  Remove step
+                </Button>
+              </div>
             </div>
             <Input id={`step-${i}`} value={s.title} onChange={(e) => edit(i, { title: e.target.value })} />
             <Textarea

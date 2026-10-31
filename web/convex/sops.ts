@@ -39,6 +39,26 @@ const cleanSteps = (steps: Step[]) =>
     .map((s) => ({ title: clip(s.title, 120), detail: clip(s.detail, 600), check: clip(s.check, 300) }))
     .filter((s) => s.title);
 
+const STEP_SYSTEM = `You rewrite one step of an SOP so a new employee with no AI background can follow it. The user turn is JSON with the SOP "title" and the "step" (title, detail, check). Keep the same meaning and order of actions. Never add amounts, systems, names or rules that aren't there.
+- title: at most 8 words, starting with a verb.
+- detail: 1 or 2 short, plain sentences: exactly what to do.
+- check: one short sentence: how they know it's done right.
+No jargon, no markdown.`;
+
+const STEP_SCHEMA = DRAFT_SCHEMA.properties.steps.items;
+
+// The employer asks the AI to make one step easier to follow. Nothing is saved.
+export const rewriteStep = action({
+  args: { title: v.string(), step: sopStepValidator },
+  handler: async (ctx, { title, step }): Promise<Step> => {
+    await requireCoo(ctx);
+    if (!step.title.trim() && !step.detail.trim()) throw new ConvexError("Write the step first.");
+    const out = await claude<Step>(STEP_SYSTEM, STEP_SCHEMA, { title: clip(title, 120), step }).catch(() => null);
+    if (!out) throw new ConvexError("I couldn't reach the AI just now. Try again.");
+    return cleanSteps([out])[0] ?? step;
+  },
+});
+
 // The employer teaches the AI one task; Claude writes the SOP. Nothing is saved until they hit save.
 export const draft = action({
   args: {
