@@ -3,7 +3,7 @@ import { action, mutation, query } from "./_generated/server";
 import { scrape } from "./knowledge";
 import { sopSourceValidator, sopStepValidator } from "./schema";
 import { tellTeam } from "./team";
-import { claude, getTeam, imageData, requireCoo } from "./util";
+import { claude, getTeam, imageData, isEmployer, requireCoo } from "./util";
 
 type Step = { title: string; detail: string; check: string };
 type Draft = { title: string; summary: string; steps: Step[] };
@@ -140,7 +140,7 @@ export const list = query({
   handler: async (ctx) => {
     const team = await ctx.db.query("teams").first();
     if (!team) return [];
-    const employer = (await ctx.auth.getUserIdentity()) !== null;
+    const employer = await isEmployer(ctx);
     const sops = await ctx.db.query("sops").withIndex("by_team", (q) => q.eq("teamId", team._id)).order("desc").take(100);
     return await Promise.all(
       sops

@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { UserIdentity } from "convex/server";
 import { ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
@@ -8,10 +9,19 @@ export const assertAgent = (secret: string) => {
   if (!process.env.AGENT_SECRET || secret !== process.env.AGENT_SECRET) throw new Error("Unauthorized");
 };
 
+// shortcut: DEMO_MODE=1 lets anyone act as a mock employer so judges skip sign-in; turn it off before real users.
+export const demoMode = () => process.env.DEMO_MODE === "1";
+const DEMO_EMPLOYER: UserIdentity = { name: "Demo employer", subject: "demo-employer", tokenIdentifier: "demo|employer", issuer: "demo" };
+
+export async function isEmployer(ctx: Pick<QueryCtx, "auth">) {
+  return (await ctx.auth.getUserIdentity()) !== null || demoMode();
+}
+
 export async function requireCoo(ctx: Pick<QueryCtx, "auth">) {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new ConvexError("Sign in as the employer first.");
-  return identity;
+  if (identity) return identity;
+  if (demoMode()) return DEMO_EMPLOYER;
+  throw new ConvexError("Sign in as the employer first.");
 }
 
 export async function getTeam(ctx: QueryCtx) {

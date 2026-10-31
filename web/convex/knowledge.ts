@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { getTeam, requireCoo } from "./util";
+import { getTeam, isEmployer, requireCoo } from "./util";
 
 const MAX_CHARS = 15000;
 const kindValidator = v.union(v.literal("url"), v.literal("text"), v.literal("video"));
@@ -11,7 +11,7 @@ const VIDEO = /youtube\.com|youtu\.be|vimeo\.com|loom\.com|\.(mp4|mov|webm)(\?|$
 export const add = action({
   args: { url: v.optional(v.string()), text: v.optional(v.string()), title: v.optional(v.string()) },
   handler: async (ctx, args): Promise<null> => {
-    if (!(await ctx.auth.getUserIdentity())) throw new ConvexError("Sign in as the COO first.");
+    await requireCoo(ctx);
     const url = args.url?.trim();
     let text = args.text?.trim() ?? "";
     let title = args.title?.trim() ?? "";
@@ -61,7 +61,7 @@ export const insert = internalMutation({
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    if (!(await ctx.auth.getUserIdentity())) return null;
+    if (!(await isEmployer(ctx))) return null;
     const team = await ctx.db.query("teams").first();
     if (!team) return [];
     const rows = await ctx.db.query("knowledge").withIndex("by_team", (q) => q.eq("teamId", team._id)).order("desc").take(100);
