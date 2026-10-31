@@ -17,19 +17,9 @@ export const add = action({
     let title = args.title?.trim() ?? "";
     let kind: "url" | "text" | "video" = "text";
     if (url) {
-      if (!/^https?:\/\/\S+$/i.test(url)) throw new ConvexError("Enter a full link that starts with https://.");
-      const key = process.env.FIRECRAWL_API_KEY;
-      if (!key) throw new ConvexError("Set FIRECRAWL_API_KEY in Convex first.");
-      const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ url, formats: ["markdown"] }),
-      });
-      if (!res.ok) throw new ConvexError(`Couldn't read that link (${res.status}).`);
-      const { data } = await res.json();
-      // A video page gives whatever transcript or description the scrape finds.
-      text = (data?.markdown || data?.metadata?.description || "").trim();
-      title ||= data?.metadata?.title || url;
+      const page = await scrape(url);
+      text = page.text;
+      title ||= page.title || url;
       kind = VIDEO.test(url) ? "video" : "url";
     }
     if (!text) throw new ConvexError(url ? "That link had no text to learn from." : "Paste a link or some text.");
@@ -42,6 +32,21 @@ export const add = action({
     return null;
   },
 });
+
+// Reads one page with Firecrawl. A video page gives whatever transcript or description the scrape finds.
+export async function scrape(url: string): Promise<{ text: string; title: string }> {
+  if (!/^https?:\/\/\S+$/i.test(url)) throw new ConvexError("Enter a full link that starts with https://.");
+  const key = process.env.FIRECRAWL_API_KEY;
+  if (!key) throw new ConvexError("Set FIRECRAWL_API_KEY in Convex first.");
+  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ url, formats: ["markdown"] }),
+  });
+  if (!res.ok) throw new ConvexError(`Couldn't read that link (${res.status}).`);
+  const { data } = await res.json();
+  return { text: (data?.markdown || data?.metadata?.description || "").trim(), title: data?.metadata?.title || "" };
+}
 
 export const insert = internalMutation({
   args: { title: v.string(), kind: kindValidator, url: v.optional(v.string()), text: v.string() },

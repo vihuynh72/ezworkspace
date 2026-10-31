@@ -7,7 +7,7 @@ import { trackValidator } from "./schema";
 import { getTeam, teamCompact, teamLogs, teamWorkers } from "./util";
 
 // Finds the worker by phone, or adds them: their first text makes them a voice.
-async function join(ctx: MutationCtx, phone: string) {
+export async function join(ctx: MutationCtx, phone: string) {
   const found = await ctx.db.query("workers").withIndex("by_phone", (q) => q.eq("phone", phone)).unique();
   if (found) return found;
   const team = await getTeam(ctx);
@@ -178,6 +178,9 @@ export const forget = internalMutation({
         if (pb.originatorId !== worker._id) continue;
         if (pb.published) await ctx.db.patch("playbooks", pb._id, { originatorId: undefined });
         else await ctx.db.delete("playbooks", pb._id);
+      }
+      for await (const t of ctx.db.query("trainings").withIndex("by_worker", (q) => q.eq("workerId", worker._id))) {
+        await ctx.db.delete("trainings", t._id);
       }
       await ctx.db.delete("workers", worker._id); // memory and skills go with it
     }

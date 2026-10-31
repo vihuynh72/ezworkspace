@@ -2,6 +2,14 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export const trackValidator = v.union(v.literal("transition"), v.literal("newhire"));
+export const sopSourceValidator = v.union(
+  v.literal("voice"),
+  v.literal("text"),
+  v.literal("screen"),
+  v.literal("video"),
+  v.literal("link"),
+);
+export const sopStepValidator = v.object({ title: v.string(), detail: v.string(), check: v.string() });
 
 export default defineSchema({
   teams: defineTable({
@@ -72,6 +80,28 @@ export default defineSchema({
     chars: v.number(),
     addedAt: v.number(),
   }).index("by_team", ["teamId"]),
+  // A task the employer taught the AI. Once published, every employee can train on it.
+  sops: defineTable({
+    teamId: v.id("teams"),
+    title: v.string(),
+    summary: v.string(),
+    steps: v.array(sopStepValidator),
+    source: sopSourceValidator,
+    published: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_team", ["teamId"]),
+  // One employee's progress on one SOP. The employer only ever sees totals.
+  trainings: defineTable({
+    workerId: v.id("workers"),
+    sopId: v.id("sops"),
+    step: v.number(), // 1-based
+    done: v.boolean(),
+    startedAt: v.number(),
+    finishedAt: v.optional(v.number()),
+    paused: v.optional(v.boolean()), // EXIT; START or the web page resumes it
+  })
+    .index("by_worker", ["workerId"])
+    .index("by_sop", ["sopId"]),
   // Public registry of Compact signers, kept honest by a Firecrawl search of WARN/layoff notices.
   registry: defineTable({
     company: v.string(),

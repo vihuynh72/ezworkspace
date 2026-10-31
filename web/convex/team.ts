@@ -109,7 +109,7 @@ export const publishPlaybook = mutation({
 });
 
 // Texts every real worker; seeded demo workers have no phone to buzz.
-async function tellTeam(ctx: MutationCtx, teamId: Id<"teams">, body: string) {
+export async function tellTeam(ctx: MutationCtx, teamId: Id<"teams">, body: string) {
   for (const w of (await teamWorkers(ctx, teamId)).filter((w) => !w.seeded)) {
     // web-fallback workers read it in the browser, so iMessage skips it
     await ctx.db.insert("outbox", { to: w.phone, sent: !w.phone.startsWith("+"), body });

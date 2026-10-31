@@ -1,11 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { action, type ActionCtx } from "./_generated/server";
 import { pick } from "./knowledge";
 import { PATHS, progressLine, progressOf, suggest } from "./paths";
-import { assertAgent } from "./util";
+import { turn } from "./training";
+import { assertAgent, claude } from "./util";
 
 type Mine = FunctionReturnType<typeof internal.workers.mine>;
 
@@ -79,6 +79,15 @@ async function handle(ctx: ActionCtx, from: string, body: string): Promise<strin
     await ctx.runMutation(internal.workers.forget, { phone: from });
     return "Deleted. Everything you told ezworkspace is gone, and you're no longer counted on your team.";
   }
+  // Training on a published SOP: START begins the newest, EXIT leaves, and everything in between goes to the trainer.
+  const route = await ctx.runQuery(internal.training.route, { phone: from });
+  if (word === "exit") {
+    if (!route.active) return "You're not in a training right now. Reply START to begin one.";
+    await ctx.runMutation(internal.training.exit, { phone: from });
+    return "Okay, you left the training. Reply START anytime to come back.";
+  }
+  const sopId = word === "start" ? route.newest : route.active;
+  if (sopId) return (await turn(ctx, from, sopId, word === "start" ? "" : body)).reply;
   const me: Mine = await ctx.runQuery(internal.workers.mine, { phone: from });
   const kw = KEYWORDS.get(word);
   if (kw === "share") return await share(ctx, me);
@@ -242,23 +251,6 @@ async function coach(me: Mine, body: string, sources: { title: string; text: str
     memory: memory.trim(),
     log: { ...log, tool: tool || null, minutesPerWeek: log.keepHuman ? 0 : Math.max(0, Math.round(log.minutesPerWeek)) },
   };
-}
-
-// One structured Claude call, or null when there's no key or Claude refuses.
-async function claude<T>(system: string, schema: Record<string, unknown>, user: unknown): Promise<T | null> {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
-  const res = await new Anthropic().beta.messages.create({
-    model: "claude-opus-5-5",
-    max_tokens: 4000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    output_config: { effort: "low", format: { type: "json_schema", schema } },
-    system,
-    messages: [{ role: "user", content: JSON.stringify(user) }],
-  });
-  const block = res.content.find((b) => b.type === "text");
-  if (res.stop_reason === "refusal" || block?.type !== "text") return null;
-  return JSON.parse(block.text) as T;
 }
 
 const SHARE_SCHEMA = {
